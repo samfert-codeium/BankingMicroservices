@@ -1,5 +1,6 @@
 package org.training.transactions.repository;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.training.transactions.model.entity.Transaction;
 
@@ -13,6 +14,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
      * @param accountId the ID of the account
      * @return a list of transactions
      */
+    @Cacheable(value = "transactions", key = "'account:' + #accountId")
     List<Transaction> findTransactionByAccountId(String accountId);
 
     /**
@@ -21,5 +23,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
      * @param referenceId The reference ID to match against.
      * @return The list of transactions that match the reference ID.
      */
+    @Cacheable(value = "transactions", key = "'ref:' + #referenceId")
     List<Transaction> findTransactionByReferenceId(String referenceId);
 }

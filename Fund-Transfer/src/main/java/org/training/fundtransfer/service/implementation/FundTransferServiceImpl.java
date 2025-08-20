@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.training.fundtransfer.exception.AccountUpdateException;
 import org.training.fundtransfer.exception.GlobalErrorCode;
 import org.training.fundtransfer.exception.InsufficientBalance;
@@ -52,6 +53,7 @@ public class FundTransferServiceImpl implements FundTransferService {
      * @throws InsufficientBalance If the required amount to transfer is not available.
      */
     @Override
+    @Transactional
     public FundTransferResponse fundTransfer(FundTransferRequest fundTransferRequest) {
 
         Account fromAccount;
