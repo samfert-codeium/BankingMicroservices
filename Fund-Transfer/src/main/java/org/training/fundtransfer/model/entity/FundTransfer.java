@@ -17,6 +17,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @Entity
+@Table(indexes = {
+    @Index(name = "idx_from_account", columnList = "fromAccount"),
+    @Index(name = "idx_to_account", columnList = "toAccount"),
+    @Index(name = "idx_transaction_reference", columnList = "transactionReference")
+})
 public class FundTransfer {
 
     @Id
