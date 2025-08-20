@@ -9,6 +9,12 @@ spring:
     url: jdbc:mysql://localhost:3306/transaction_service
     username: root
     password: root
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
 
   jpa:
     hibernate:
@@ -17,6 +23,40 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        batch_versioned_data: true
+  
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
+  
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    timeout: 2000ms
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 10000
+  circuitbreaker:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 
 server:
   port: 8084
