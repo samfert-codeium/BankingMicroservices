@@ -19,5 +19,12 @@ spring:
       hibernate:
         format_sql: true
 
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=5m
+    cache-names:
+      - transactions
+
 server:
   port: 8081
