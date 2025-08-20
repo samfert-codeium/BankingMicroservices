@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: account-service-test
+    ok: 200
+    not_found: 404
+    bad_request: 400
+    conflict: 409
+
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=100,expireAfterWrite=1m
+    cache-names:
+      - transactions
+
+# Mock external services for testing
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+
+logging:
+  level:
+    org.training.account.service: DEBUG
+    org.springframework.cache: DEBUG
