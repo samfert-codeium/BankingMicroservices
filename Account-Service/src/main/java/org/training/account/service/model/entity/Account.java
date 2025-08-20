@@ -13,6 +13,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
+@Table(indexes = {
+    @Index(name = "idx_user_id", columnList = "userId")
+})
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

@@ -11,6 +11,10 @@ import javax.persistence.*;
 import java.time.LocalDate;
 
 @Entity
+@Table(indexes = {
+    @Index(name = "idx_auth_id", columnList = "authId"),
+    @Index(name = "idx_email_id", columnList = "emailId")
+})
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder

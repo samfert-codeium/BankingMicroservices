@@ -23,14 +23,29 @@ spring:
           uri: lb://user-service
           predicates:
             - Path=/api/users/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
         - id: fund-transfer-service
           uri: lb://fund-transfer-service
           predicates:
             - Path=/api/fund-transfers/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
         - id: account-service
           uri: lb://account-service
           predicates:
             - Path=/accounts/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
         - id: sequence-generator
           uri: lb://sequence-generator
           predicates:
@@ -39,10 +54,20 @@ spring:
           uri: lb://transaction-service
           predicates:
             - Path=/transactions/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
         - id: fund-transfer-service
           uri: lb://fund-transfer-service
           predicates:
             - Path=/fund-transfers/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
 
   security:
     oauth2:
@@ -66,4 +91,9 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: ${app.config.keycloak.url}/realms/${app.config.keycloak.realm}/protocol/openid-connect/certs
+
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 2000ms
 
