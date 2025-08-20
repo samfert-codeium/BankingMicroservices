@@ -3,11 +3,19 @@ package org.training.account.service;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
+import org.training.account.service.external.TransactionService;
 import org.training.account.service.model.dto.external.TransactionResponse;
 import org.training.account.service.service.AccountService;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -15,10 +23,31 @@ public class CachePerformanceTest {
 
     @Autowired
     private AccountService accountService;
+    
+    @MockBean
+    private TransactionService transactionService;
 
     @Test
     public void testTransactionCachePerformance() {
         String testAccountId = "TEST_ACCOUNT_001";
+        
+        List<TransactionResponse> mockTransactions = Arrays.asList(
+            TransactionResponse.builder()
+                .referenceId("TXN001")
+                .accountId(testAccountId)
+                .transactionType("DEPOSIT")
+                .amount(BigDecimal.valueOf(1000))
+                .localDateTime(LocalDateTime.now())
+                .transactionStatus("COMPLETED")
+                .comments("Test transaction")
+                .build()
+        );
+        
+        when(transactionService.getTransactionsFromAccountId(anyString()))
+            .thenAnswer(invocation -> {
+                Thread.sleep(100);
+                return mockTransactions;
+            });
         
         System.out.println("=== Cache Performance Test ===");
         
