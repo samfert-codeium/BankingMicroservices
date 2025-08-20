@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.training.account.service.exception.*;
@@ -162,6 +163,7 @@ public class AccountServiceImpl implements AccountService {
      * @return A list of transaction responses
      */
     @Override
+    @Cacheable(value = "transactions", key = "#accountId")
     public List<TransactionResponse> getTransactionsFromAccountId(String accountId) {
 
         return transactionService.getTransactionsFromAccountId(accountId);
