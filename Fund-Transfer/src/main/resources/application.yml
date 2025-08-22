@@ -11,6 +11,13 @@ spring:
     url: jdbc:mysql://localhost:3306/fund_transfer_service
     username: root
     password: root
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 5
+      idle-timeout: 600000
+      connection-timeout: 30000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
 
   jpa:
     hibernate:
