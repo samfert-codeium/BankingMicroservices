@@ -6,6 +6,8 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
@@ -13,17 +15,13 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         http
-                .authorizeExchange()
-                //ALLOWING REGISTER API FOR DIRECT ACCESS
-                .pathMatchers("/api/users/register").permitAll()
-                //ALL OTHER APIS ARE AUTHENTICATED
-                .anyExchange().authenticated()
-                .and()
-                .csrf().disable()
-                .oauth2Login()
-                .and()
-                .oauth2ResourceServer()
-                .jwt();
+                .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers("/api/users/register").permitAll()
+                        .anyExchange().authenticated()
+                )
+                .csrf(csrf -> csrf.disable())
+                .oauth2Login(withDefaults())
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()));
         return http.build();
     }
 }
