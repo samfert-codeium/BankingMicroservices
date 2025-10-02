@@ -65,7 +65,7 @@ public class FundTransferServiceImpl implements FundTransferService {
             log.error("account status is pending or inactive, please update the account status");
             throw new AccountUpdateException("account is status is :pending", GlobalErrorCode.NOT_ACCEPTABLE);
         }
-        if (fromAccount.getAvailableBalance().compareTo(fundTransferRequest.getAmount()) < 0) {
+        if (fromAccount.getAvailableBalance().compareTo(fundTransferRequest.getAmount()) <= 0) {
             log.error("required amount to transfer is not available");
             throw new InsufficientBalance("requested amount is not available", GlobalErrorCode.NOT_ACCEPTABLE);
         }
