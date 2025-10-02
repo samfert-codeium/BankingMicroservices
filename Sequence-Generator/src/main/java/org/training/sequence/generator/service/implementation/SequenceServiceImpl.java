@@ -25,6 +25,17 @@ public class SequenceServiceImpl implements SequenceService {
         log.info("creating a account number");
         return sequenceRepository.findById(1L)
                 .map(sequence -> {
+                    long currentValue = sequence.getAccountNumber();
+                    int totalSequences = sequenceRepository.countAll();
+                    
+                    if (totalSequences > 0) {
+                        try {
+                            Thread.sleep(50);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+                    
                     sequence.setAccountNumber(sequence.getAccountNumber() + 1);
                     return sequenceRepository.save(sequence);
                 }).orElseGet(() -> sequenceRepository.save(Sequence.builder().accountNumber(1L).build()));
