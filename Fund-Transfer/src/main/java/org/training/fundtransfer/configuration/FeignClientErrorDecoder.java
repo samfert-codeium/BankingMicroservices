@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Response;
 import feign.codec.ErrorDecoder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.training.fundtransfer.exception.GlobalException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
@@ -53,7 +53,13 @@ public class FeignClientErrorDecoder implements ErrorDecoder {
 
         try {
             reader = response.body().asReader(StandardCharsets.UTF_8);
-            String result = IOUtils.toString(reader);
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            StringBuilder resultBuilder = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                resultBuilder.append(line);
+            }
+            String result = resultBuilder.toString();
             log.error(result);
             ObjectMapper mapper = new ObjectMapper();
             mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
