@@ -39,7 +39,7 @@ spring:
           uri: lb://transaction-service
           predicates:
             - Path=/transactions/**
-        - id: fund-transfer-service
+        - id: fund-transfer-service-direct
           uri: lb://fund-transfer-service
           predicates:
             - Path=/fund-transfers/**
