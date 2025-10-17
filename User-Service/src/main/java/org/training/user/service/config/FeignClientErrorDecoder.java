@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Response;
 import feign.codec.ErrorDecoder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
+import java.io.StringWriter;
 import org.training.user.service.exception.GlobalException;
 
 import java.io.IOException;
@@ -53,7 +53,9 @@ public class FeignClientErrorDecoder implements ErrorDecoder {
 
         try {
             reader = response.body().asReader(StandardCharsets.UTF_8);
-            String result = IOUtils.toString(reader);
+            StringWriter writer = new StringWriter();
+            reader.transferTo(writer);
+            String result = writer.toString();
             log.error(result);
             ObjectMapper mapper = new ObjectMapper();
             mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
