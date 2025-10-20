@@ -1,0 +1,43 @@
+server:
+  port: 8080
+
+eureka:
+  client:
+    enabled: false
+
+spring:
+  application:
+    name: api-gateway-test
+  cloud:
+    gateway:
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+        - id: fund-transfer-service
+          uri: lb://fund-transfer-service
+          predicates:
+            - Path=/api/fund-transfers/**
+        - id: account-service
+          uri: lb://account-service
+          predicates:
+            - Path=/accounts/**
+        - id: sequence-generator
+          uri: lb://sequence-generator
+          predicates:
+            - Path=/sequence/**
+        - id: transaction-service
+          uri: lb://transaction-service
+          predicates:
+            - Path=/transactions/**
+  security:
+    oauth2:
+      client:
+        registration:
+          banking-service-client:
+            client-id: test-client
+            client-secret: test-secret
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8571/realms/banking-service
