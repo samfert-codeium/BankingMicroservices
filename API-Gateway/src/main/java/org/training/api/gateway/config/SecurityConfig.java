@@ -13,17 +13,13 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         http
-                .authorizeExchange()
-                //ALLOWING REGISTER API FOR DIRECT ACCESS
-                .pathMatchers("/api/users/register").permitAll()
-                //ALL OTHER APIS ARE AUTHENTICATED
-                .anyExchange().authenticated()
-                .and()
-                .csrf().disable()
-                .oauth2Login()
-                .and()
-                .oauth2ResourceServer()
-                .jwt();
+                .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers("/api/users/register").permitAll()
+                        .anyExchange().authenticated()
+                )
+                .csrf(csrf -> csrf.disable())
+                .oauth2Login(oauth2 -> oauth2)
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt));
         return http.build();
     }
 }
