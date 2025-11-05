@@ -1,0 +1,273 @@
+name: Devin File Operations Demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      analysis_type:
+        description: 'Type of analysis to perform'
+        required: true
+        type: choice
+        options:
+          - security-audit
+          - code-quality-review
+          - architecture-analysis
+          - performance-analysis
+      upload_reports:
+        description: 'Upload analysis reports back to workflow'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  devin-analysis-with-files:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare analysis context files
+        id: prepare-files
+        run: |
+          mkdir -p /tmp/devin-context
+          
+          echo "Creating context files for Devin analysis..."
+          
+          cat > /tmp/devin-context/project-structure.txt << 'EOF'
+          Banking Microservices Application Structure:
+          
+          Services:
+          1. Service-Registry (Eureka) - Port 8761
+          2. API-Gateway (Spring Cloud Gateway) - Port 8080
+          3. User-Service - Port 8081
+          4. Account-Service - Port 8082
+          5. Fund-Transfer - Port 8083
+          6. Transaction-Service - Port 8084
+          7. Sequence-Generator - Port 8085
+          
+          Technology Stack:
+          - Spring Boot 3.x
+          - Spring Cloud
+          - Spring Security with Keycloak
+          - MySQL databases (one per service)
+          - Maven for build management
+          EOF
+          
+          cat > /tmp/devin-context/security-checklist.txt << 'EOF'
+          Security Analysis Checklist:
+          
+          1. Authentication & Authorization
+             - Keycloak integration in User-Service
+             - OAuth2 configuration in API Gateway
+             - JWT token validation
+          
+          2. API Security
+             - Input validation
+             - SQL injection prevention
+             - CSRF protection
+          
+          3. Data Protection
+             - Database connection security
+             - Sensitive data encryption
+             - Transaction integrity
+          
+          4. Inter-Service Communication
+             - Service-to-service authentication
+             - Circuit breakers
+             - Rate limiting
+          EOF
+          
+          cat > /tmp/devin-context/analysis-instructions.txt << 'EOF'
+          Analysis Instructions for Devin:
+          
+          Focus Areas for ${{ github.event.inputs.analysis_type }}:
+          
+          Please analyze the Banking Microservices application with emphasis on:
+          - Code quality and maintainability
+          - Security best practices for financial applications
+          - Microservices design patterns
+          - Spring Boot best practices
+          - Database transaction handling
+          
+          After completing the analysis, please generate:
+          1. A detailed analysis report (analysis-report.md)
+          2. List of findings with severity levels (findings.json)
+          3. Recommendations document (recommendations.md)
+          
+          Repository: ${{ github.repository }}
+          Branch: ${{ github.ref_name }}
+          EOF
+          
+          ls -la /tmp/devin-context/
+          echo "context-dir=/tmp/devin-context" >> $GITHUB_OUTPUT
+
+      - name: Create Devin Session with Context Files
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762363168-devin-api-download-attachments
+        id: create-session
+        with:
+          action: 'create-session'
+          api-key: ${{ secrets.DEVIN_API_KEY }}
+          prompt: |
+            Perform a comprehensive ${{ github.event.inputs.analysis_type }} of the Banking Microservices application.
+            
+            I've uploaded context files that contain:
+            - Project structure and service details
+            - Security analysis checklist
+            - Specific analysis instructions
+            
+            Please review these files first, then analyze the codebase accordingly.
+            
+            After your analysis, please create the following deliverables and let me know when they're ready:
+            1. analysis-report.md - Detailed findings and analysis
+            2. findings.json - Structured list of issues found
+            3. recommendations.md - Actionable recommendations
+          title: '${{ github.event.inputs.analysis_type }} - Banking Microservices'
+          tags: 'analysis,banking-microservices,file-operations'
+
+      - name: Upload Context Files to Devin Session
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762363168-devin-api-download-attachments
+        id: upload-context
+        with:
+          action: 'upload-files'
+          api-key: ${{ secrets.DEVIN_API_KEY }}
+          session-id: ${{ steps.create-session.outputs.session-id }}
+          file-paths: |
+            ${{ steps.prepare-files.outputs.context-dir }}/project-structure.txt
+            ${{ steps.prepare-files.outputs.context-dir }}/security-checklist.txt
+            ${{ steps.prepare-files.outputs.context-dir }}/analysis-instructions.txt
+
+      - name: Send Additional Context
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762363168-devin-api-download-attachments
+        with:
+          action: 'send-message'
+          api-key: ${{ secrets.DEVIN_API_KEY }}
+          session-id: ${{ steps.create-session.outputs.session-id }}
+          message: |
+            Analysis context files have been uploaded. Please review them before proceeding with the analysis.
+            
+            Key areas to focus on:
+            - Service Registry and discovery patterns
+            - API Gateway security configuration
+            - Database transaction management in Fund Transfer
+            - Authentication flow with Keycloak
+            - Inter-service communication patterns
+            
+            When you've completed the analysis and generated the deliverables, please upload them as attachments so I can download them.
+
+      - name: Wait for Analysis Completion
+        run: |
+          echo "⏳ Waiting for Devin to complete the analysis..."
+          echo ""
+          echo "Monitor progress at: ${{ steps.create-session.outputs.session-url }}"
+          echo ""
+          echo "Once Devin uploads the analysis deliverables, you can retrieve them using the download-attachment-files action."
+          echo ""
+          echo "Session ID: ${{ steps.create-session.outputs.session-id }}"
+
+      - name: Download Analysis Report (Example)
+        if: github.event.inputs.upload_reports == 'true'
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762363168-devin-api-download-attachments
+        id: download-report
+        continue-on-error: true
+        with:
+          action: 'download-attachment-files'
+          api-key: ${{ secrets.DEVIN_API_KEY }}
+          attachment-uuid: 'REPLACE_WITH_ACTUAL_UUID'
+          attachment-name: 'analysis-report.md'
+
+      - name: Download Findings (Example)
+        if: github.event.inputs.upload_reports == 'true'
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762363168-devin-api-download-attachments
+        id: download-findings
+        continue-on-error: true
+        with:
+          action: 'download-attachment-files'
+          api-key: ${{ secrets.DEVIN_API_KEY }}
+          attachment-uuid: 'REPLACE_WITH_ACTUAL_UUID'
+          attachment-name: 'findings.json'
+
+      - name: Download Recommendations (Example)
+        if: github.event.inputs.upload_reports == 'true'
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762363168-devin-api-download-attachments
+        id: download-recommendations
+        continue-on-error: true
+        with:
+          action: 'download-attachment-files'
+          api-key: ${{ secrets.DEVIN_API_KEY }}
+          attachment-uuid: 'REPLACE_WITH_ACTUAL_UUID'
+          attachment-name: 'recommendations.md'
+
+      - name: Save Downloaded Files
+        if: github.event.inputs.upload_reports == 'true' && steps.download-report.outcome == 'success'
+        run: |
+          mkdir -p analysis-output
+          
+          if [ -n "${{ steps.download-report.outputs.response }}" ]; then
+            echo "${{ steps.download-report.outputs.response }}" > analysis-output/analysis-report.md
+            echo "✓ Saved analysis-report.md"
+          fi
+          
+          if [ -n "${{ steps.download-findings.outputs.response }}" ]; then
+            echo "${{ steps.download-findings.outputs.response }}" > analysis-output/findings.json
+            echo "✓ Saved findings.json"
+          fi
+          
+          if [ -n "${{ steps.download-recommendations.outputs.response }}" ]; then
+            echo "${{ steps.download-recommendations.outputs.response }}" > analysis-output/recommendations.md
+            echo "✓ Saved recommendations.md"
+          fi
+          
+          echo ""
+          echo "Analysis deliverables saved to: analysis-output/"
+          ls -la analysis-output/
+
+      - name: Update Session Tags
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762363168-devin-api-download-attachments
+        with:
+          action: 'update-tags'
+          api-key: ${{ secrets.DEVIN_API_KEY }}
+          session-id: ${{ steps.create-session.outputs.session-id }}
+          tags: 'analysis,${{ github.event.inputs.analysis_type }},banking-microservices,completed,file-operations-demo'
+
+      - name: Output Session Summary
+        run: |
+          echo "=================================================="
+          echo "Devin File Operations Demo - Session Summary"
+          echo "=================================================="
+          echo ""
+          echo "📋 Analysis Type: ${{ github.event.inputs.analysis_type }}"
+          echo "🆔 Session ID: ${{ steps.create-session.outputs.session-id }}"
+          echo "🔗 Session URL: ${{ steps.create-session.outputs.session-url }}"
+          echo ""
+          echo "✅ Demonstrated Actions:"
+          echo "  • create-session - Created Devin analysis session"
+          echo "  • upload-files - Uploaded 3 context files to session"
+          echo "  • send-message - Sent additional instructions"
+          echo "  • download-attachment-files - Retrieved analysis deliverables"
+          echo "  • update-tags - Updated session tags"
+          echo ""
+          echo "📝 Note: The download-attachment-files steps use placeholder UUIDs."
+          echo "   In a real workflow, you would:"
+          echo "   1. Wait for Devin to complete the analysis"
+          echo "   2. Devin uploads deliverables as attachments"
+          echo "   3. Get the attachment UUIDs from the Devin session"
+          echo "   4. Use those UUIDs in the download-attachment-files action"
+          echo ""
+          echo "🔍 Monitor the full session at:"
+          echo "   ${{ steps.create-session.outputs.session-url }}"
+          echo ""
+          echo "=================================================="
+
+      - name: Upload Analysis Output as Artifacts
+        if: github.event.inputs.upload_reports == 'true'
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: devin-analysis-output
+          path: analysis-output/
+          retention-days: 30
