@@ -59,6 +59,8 @@ This directory contains automated workflows that integrate with Devin API for va
 
 ## Setup Instructions
 
+**✅ Repository Status**: The DEVIN-GITHUB-ACTIONS repository is now PUBLIC, which allows these workflows to access the Devin API action.
+
 ### 1. Get a Devin API Key
 
 1. Visit [Devin Settings](https://app.devin.ai/settings)
