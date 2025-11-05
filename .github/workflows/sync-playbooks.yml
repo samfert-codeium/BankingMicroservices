@@ -1,0 +1,62 @@
+name: Sync Playbooks to Devin
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'playbooks/**/*.md'
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Operation to perform'
+        required: false
+        type: choice
+        options:
+          - sync
+          - list
+        default: 'sync'
+
+jobs:
+  sync-playbooks:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Sync playbooks to Devin
+        id: sync
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS@devin/1762305531-playbook-sync-action
+        with:
+          devin-api-key: ${{ secrets.DEVIN_API_KEY }}
+          operation: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.operation || 'sync' }}
+          directory: './playbooks'
+          recursive: 'true'
+
+      - name: Output sync results
+        if: github.event.inputs.operation == 'sync' || github.event_name == 'push'
+        run: |
+          echo "=========================================="
+          echo "Playbooks Synced to Devin Successfully"
+          echo "=========================================="
+          echo ""
+          echo "Playbook IDs: ${{ steps.sync.outputs.playbook-ids }}"
+          echo "Playbooks synced: ${{ steps.sync.outputs.playbooks-count }}"
+          echo ""
+          if [ -n "${{ steps.sync.outputs.playbook-ids }}" ]; then
+            echo "✓ Created/updated ${{ steps.sync.outputs.playbooks-count }} playbook(s)"
+          else
+            echo "⚠ No playbooks were created (playbooks/ directory may be empty)"
+          fi
+
+      - name: Output list results
+        if: github.event.inputs.operation == 'list'
+        run: |
+          echo "=========================================="
+          echo "Devin Playbooks List"
+          echo "=========================================="
+          echo ""
+          echo "Total playbooks: ${{ steps.sync.outputs.playbooks-count }}"
+          echo ""
+          echo "Details:"
+          echo '${{ steps.sync.outputs.operation-result }}' | jq '.'
