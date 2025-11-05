@@ -32,7 +32,7 @@ jobs:
           echo "pr-url=${{ github.event.pull_request.html_url }}" >> $GITHUB_OUTPUT
 
       - name: Create Devin Session for Code Review
-        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762304734-devin-action-implementation
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762363168-devin-api-download-attachments
         id: create-session
         with:
           action: 'create-session'
@@ -58,7 +58,7 @@ jobs:
           tags: 'code-review,banking-microservices,automated'
 
       - name: Send Microservices Context
-        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762304734-devin-action-implementation
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762363168-devin-api-download-attachments
         with:
           action: 'send-message'
           api-key: ${{ secrets.DEVIN_API_KEY }}
@@ -80,7 +80,7 @@ jobs:
             - Service discovery and inter-service communication patterns
 
       - name: Add Session Tags
-        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762304734-devin-action-implementation
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762363168-devin-api-download-attachments
         with:
           action: 'update-tags'
           api-key: ${{ secrets.DEVIN_API_KEY }}
