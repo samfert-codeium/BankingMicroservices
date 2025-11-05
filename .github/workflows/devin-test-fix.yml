@@ -1,0 +1,102 @@
+name: Fix Failing Tests with Devin
+
+on:
+  workflow_dispatch:
+    inputs:
+      service_name:
+        description: 'Service to fix (or "all" for all services)'
+        required: true
+        type: choice
+        options:
+          - all
+          - Service-Registry
+          - Sequence-Generator
+          - API-Gateway
+          - User-Service
+          - Account-Service
+          - Fund-Transfer
+          - Transaction-Service
+      additional_instructions:
+        description: 'Additional instructions for Devin'
+        required: false
+        default: ''
+
+jobs:
+  create-devin-session:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Tests to Identify Failures
+        id: test-run
+        continue-on-error: true
+        run: |
+          if [ "${{ github.event.inputs.service_name }}" = "all" ]; then
+            cd ~/repos/BankingMicroservices
+            for service in Service-Registry Sequence-Generator API-Gateway; do
+              echo "Testing $service..."
+              cd $service && mvn test -q && cd ..
+            done
+          else
+            cd "${{ github.event.inputs.service_name }}"
+            mvn test
+          fi
+
+      - name: Create Devin Session to Fix Tests
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762304734-devin-action-implementation
+        id: fix-tests
+        with:
+          action: 'create-session'
+          api-key: ${{ secrets.DEVIN_API_KEY }}
+          prompt: |
+            Fix the failing tests in the Banking Microservices application.
+            
+            Service to fix: ${{ github.event.inputs.service_name }}
+            
+            Tasks:
+            1. Identify all failing tests
+            2. Analyze the root cause of failures
+            3. Fix the code to make tests pass
+            4. Ensure no regression in other tests
+            5. Run tests to verify fixes
+            
+            ${{ github.event.inputs.additional_instructions && format('Additional instructions: {0}', github.event.inputs.additional_instructions) || '' }}
+            
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+          title: 'Fix Tests - ${{ github.event.inputs.service_name }}'
+          tags: 'test-fix,banking-microservices,automated'
+          max-acu-limit: 2000
+
+      - name: Send Test Context
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762304734-devin-action-implementation
+        with:
+          action: 'send-message'
+          api-key: ${{ secrets.DEVIN_API_KEY }}
+          session-id: ${{ steps.fix-tests.outputs.session-id }}
+          message: |
+            Test execution completed. Check the test output above for details.
+            
+            After fixing the tests, please:
+            1. Run the test verification command to ensure all tests pass
+            2. Run the lint command to ensure code quality
+            3. Create a pull request with your fixes
+            
+            Test command: cd ~/repos/BankingMicroservices && for service in Service-Registry Sequence-Generator API-Gateway; do echo "Testing $service..."; cd $service && mvn test -q && cd ..; done
+            
+            Lint command: cd ~/repos/BankingMicroservices && for service in Service-Registry Sequence-Generator API-Gateway User-Service Account-Service Fund-Transfer Transaction-Service; do echo "Compiling $service..."; cd $service && mvn compile && cd ..; done
+
+      - name: Output Session Information
+        run: |
+          echo "==================================="
+          echo "Devin Session Created"
+          echo "==================================="
+          echo ""
+          echo "Session ID: ${{ steps.fix-tests.outputs.session-id }}"
+          echo "Session URL: ${{ steps.fix-tests.outputs.session-url }}"
+          echo ""
+          echo "Devin will work on fixing the tests for: ${{ github.event.inputs.service_name }}"
+          echo ""
+          echo "Monitor progress at: ${{ steps.fix-tests.outputs.session-url }}"

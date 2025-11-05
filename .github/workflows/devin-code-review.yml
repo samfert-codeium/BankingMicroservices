@@ -1,0 +1,136 @@
+name: Automated Code Review with Devin
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  workflow_dispatch:
+    inputs:
+      review_focus:
+        description: 'Specific area to focus the review on'
+        required: false
+        default: 'General code quality and best practices'
+
+jobs:
+  devin-review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get PR details
+        id: pr-info
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "pr-number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          echo "pr-title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+          echo "pr-url=${{ github.event.pull_request.html_url }}" >> $GITHUB_OUTPUT
+
+      - name: Create Devin Session for Code Review
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762304734-devin-action-implementation
+        id: create-session
+        with:
+          action: 'create-session'
+          api-key: ${{ secrets.DEVIN_API_KEY }}
+          prompt: |
+            Review the code changes in this pull request for the Banking Microservices application.
+            
+            Focus areas:
+            1. Code quality and best practices
+            2. Security vulnerabilities (especially in authentication and financial transactions)
+            3. Spring Boot and microservices patterns
+            4. Database interactions and transaction handling
+            5. API endpoint security and validation
+            6. Test coverage and quality
+            
+            ${{ github.event_name == 'workflow_dispatch' && format('Additional focus: {0}', github.event.inputs.review_focus) || '' }}
+            
+            Pull Request: ${{ github.event_name == 'pull_request' && github.event.pull_request.html_url || 'Manual review triggered' }}
+            
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.head_ref || github.ref_name }}
+          title: 'Code Review - ${{ github.event_name == ''pull_request'' && github.event.pull_request.title || ''Manual Review'' }}'
+          tags: 'code-review,banking-microservices,automated'
+
+      - name: Send Microservices Context
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762304734-devin-action-implementation
+        with:
+          action: 'send-message'
+          api-key: ${{ secrets.DEVIN_API_KEY }}
+          session-id: ${{ steps.create-session.outputs.session-id }}
+          message: |
+            This is a Spring Boot microservices application with the following services:
+            - Service Registry (Eureka)
+            - API Gateway (Spring Cloud Gateway with OAuth2)
+            - User Service (Keycloak integration)
+            - Account Service (Account management)
+            - Fund Transfer Service (Inter-account transfers)
+            - Transaction Service (Deposits/withdrawals)
+            - Sequence Generator (Unique ID generation)
+            
+            Pay special attention to:
+            - Security in API Gateway and service authentication
+            - Transaction integrity in Fund Transfer and Transaction services
+            - Database isolation (each service has its own database)
+            - Service discovery and inter-service communication patterns
+
+      - name: Add Session Tags
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762304734-devin-action-implementation
+        with:
+          action: 'update-tags'
+          api-key: ${{ secrets.DEVIN_API_KEY }}
+          session-id: ${{ steps.create-session.outputs.session-id }}
+          tags: 'code-review,banking-microservices,automated,spring-boot,microservices'
+
+      - name: Comment on PR with Devin Session
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sessionUrl = '${{ steps.create-session.outputs.session-url }}';
+            const sessionId = '${{ steps.create-session.outputs.session-id }}';
+            
+            const comment = `## 🤖 Devin Code Review
+            
+            Devin is reviewing this pull request for:
+            - Code quality and best practices
+            - Security vulnerabilities
+            - Spring Boot and microservices patterns
+            - Test coverage
+            
+            **Session URL**: ${sessionUrl}
+            **Session ID**: \`${sessionId}\`
+            
+            Devin will analyze the changes and provide feedback. You can monitor the progress at the session URL above.
+            
+            ---
+            *This review was automatically triggered by the GitHub Actions workflow.*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Output Session Information
+        run: |
+          echo "==================================="
+          echo "Devin Session Created Successfully"
+          echo "==================================="
+          echo ""
+          echo "Session ID: ${{ steps.create-session.outputs.session-id }}"
+          echo "Session URL: ${{ steps.create-session.outputs.session-url }}"
+          echo ""
+          echo "Monitor the session at: ${{ steps.create-session.outputs.session-url }}"
+          echo ""
+          if [ "${{ steps.create-session.outputs.is-new-session }}" = "true" ]; then
+            echo "✓ New session created"
+          else
+            echo "⟳ Reusing existing session (idempotent)"
+          fi
