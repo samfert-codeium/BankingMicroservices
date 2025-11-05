@@ -45,7 +45,7 @@ jobs:
           fi
 
       - name: Create Devin Session to Fix Tests
-        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762304734-devin-action-implementation
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@main
         id: fix-tests
         with:
           action: 'create-session'
@@ -71,7 +71,7 @@ jobs:
           max-acu-limit: 2000
 
       - name: Send Test Context
-        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@devin/1762304734-devin-action-implementation
+        uses: samfert-codeium/DEVIN-GITHUB-ACTIONS/devin-action@main
         with:
           action: 'send-message'
           api-key: ${{ secrets.DEVIN_API_KEY }}
