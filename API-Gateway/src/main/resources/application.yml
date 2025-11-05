@@ -43,6 +43,19 @@ spring:
           uri: lb://fund-transfer-service
           predicates:
             - Path=/fund-transfers/**
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 10s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 
   security:
     oauth2:
