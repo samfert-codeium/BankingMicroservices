@@ -23,14 +23,45 @@ spring:
           uri: lb://user-service
           predicates:
             - Path=/api/users/**
-        - id: fund-transfer-service
-          uri: lb://fund-transfer-service
-          predicates:
-            - Path=/api/fund-transfers/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
         - id: account-service
           uri: lb://account-service
           predicates:
             - Path=/accounts/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+        - id: fund-transfer-critical
+          uri: lb://fund-transfer-service
+          predicates:
+            - Path=/fund-transfers/**
+            - Method=POST
+          filters:
+            - TokenIntrospection
+            - MFARequired
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                redis-rate-limiter.requestedTokens: 1
+        - id: fund-transfer-service
+          uri: lb://fund-transfer-service
+          predicates:
+            - Path=/fund-transfers/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
         - id: sequence-generator
           uri: lb://sequence-generator
           predicates:
@@ -39,10 +70,12 @@ spring:
           uri: lb://transaction-service
           predicates:
             - Path=/transactions/**
-        - id: fund-transfer-service
-          uri: lb://fund-transfer-service
-          predicates:
-            - Path=/fund-transfers/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
 
   security:
     oauth2:
@@ -59,11 +92,16 @@ spring:
           banking-service-client:
             provider: keycloak
             client-id: banking-service-client
-            client-secret: Au6eAD2JgB5MH0G2tNrPLfKqObswfSPb
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:Au6eAD2JgB5MH0G2tNrPLfKqObswfSPb}
             authorization-grant-type: authorization_code
-            redirect-uri: http://localhost:8571/login/oauth2/code/keycloak
-            scope: openid
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: openid,profile,email,offline_access
+            client-authentication-method: client_secret_post
       resourceserver:
         jwt:
           jwk-set-uri: ${app.config.keycloak.url}/realms/${app.config.keycloak.realm}/protocol/openid-connect/certs
+        opaquetoken:
+          introspection-uri: ${app.config.keycloak.url}/realms/${app.config.keycloak.realm}/protocol/openid-connect/token/introspect
+          client-id: banking-service-client
+          client-secret: ${KEYCLOAK_CLIENT_SECRET:Au6eAD2JgB5MH0G2tNrPLfKqObswfSPb}
 

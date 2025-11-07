@@ -23,6 +23,7 @@ import org.training.user.service.model.entity.UserProfile;
 import org.training.user.service.model.external.Account;
 import org.training.user.service.model.mapper.UserMapper;
 import org.training.user.service.repository.UserRepository;
+import org.training.user.service.service.AuditService;
 import org.training.user.service.service.KeycloakService;
 import org.training.user.service.service.UserService;
 import org.training.user.service.utils.FieldChecker;
@@ -41,6 +42,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final KeycloakService keycloakService;
     private final AccountService accountService;
+    private final AuditService auditService;
 
     private UserMapper userMapper = new UserMapper();
 
@@ -97,10 +99,12 @@ public class UserServiceImpl implements UserService {
                     .identificationNumber(UUID.randomUUID().toString()).build();
 
             userRepository.save(user);
+            auditService.logUserCreation(representations.get(0).getId(), userDto.getEmailId(), true);
             return Response.builder()
                     .responseMessage("User created successfully")
                     .responseCode(responseCodeSuccess).build();
         }
+        auditService.logUserCreation(null, userDto.getEmailId(), false);
         throw new RuntimeException("User with identification number not found");
     }
 
@@ -166,6 +170,8 @@ public class UserServiceImpl implements UserService {
             throw new EmptyFields("please updated the user", responseCodeNotFound);
         }
 
+        String oldStatus = user.getStatus().toString();
+        
         if(userUpdate.getStatus().equals(Status.APPROVED)){
             UserRepresentation userRepresentation = keycloakService.readUser(user.getAuthId());
             userRepresentation.setEnabled(true);
@@ -175,6 +181,8 @@ public class UserServiceImpl implements UserService {
 
         user.setStatus(userUpdate.getStatus());
         userRepository.save(user);
+        
+        auditService.logStatusChange(user.getUserId(), user.getAuthId(), oldStatus, userUpdate.getStatus().toString());
 
         return Response.builder()
                 .responseMessage("User updated successfully")

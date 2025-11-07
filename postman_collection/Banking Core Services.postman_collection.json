@@ -486,27 +486,7 @@
 				"oauth2": [
 					{
 						"key": "clientSecret",
-						"value": "Au6eAD2JgB5MH0G2tNrPLfKqObswfSPb",
-						"type": "string"
-					},
-					{
-						"key": "password",
-						"value": "{{keycloak_client_password}}",
-						"type": "string"
-					},
-					{
-						"key": "username",
-						"value": "{{keycloak_client_username}}",
-						"type": "string"
-					},
-					{
-						"key": "grant_type",
-						"value": "password_credentials",
-						"type": "string"
-					},
-					{
-						"key": "scope",
-						"value": "openid offline_access",
+						"value": "{{keycloak_client_secret}}",
 						"type": "string"
 					},
 					{
@@ -520,9 +500,29 @@
 						"type": "string"
 					},
 					{
-						"key": "tokenName",
-						"value": "token",
+						"key": "authUrl",
+						"value": "http://localhost:8571/realms/banking-service/protocol/openid-connect/auth",
 						"type": "string"
+					},
+					{
+						"key": "grant_type",
+						"value": "authorization_code",
+						"type": "string"
+					},
+					{
+						"key": "scope",
+						"value": "openid profile email offline_access",
+						"type": "string"
+					},
+					{
+						"key": "tokenName",
+						"value": "banking_access_token",
+						"type": "string"
+					},
+					{
+						"key": "usePkce",
+						"value": true,
+						"type": "boolean"
 					},
 					{
 						"key": "addTokenTo",
