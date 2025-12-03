@@ -187,21 +187,23 @@ jobs:
           SonarCloud Report: ${SONAR_URL}"
 
           # Create Devin session via API
+          # Use PR number + run number for idempotency key to get fresh session per workflow run
           DEVIN_SESSION=$(curl -s -X POST "https://api.devin.ai/v1/sessions" \
             -H "Authorization: Bearer ${{ env.DEVIN_API_KEY }}" \
             -H "Content-Type: application/json" \
             -d "$(jq -n \
-              --arg name "SonarQube Remediation - PR #${{ github.event.pull_request.number }}" \
+              --arg name "SonarQube Fix - PR #${{ github.event.pull_request.number }}" \
               --arg repo "${{ github.server_url }}/${{ github.repository }}" \
               --arg branch "${{ github.head_ref }}" \
               --arg user_prompt "$USER_PROMPT" \
+              --arg idempotency_key "pr-${{ github.event.pull_request.number }}-run-${{ github.run_number }}" \
               '{
                 name: $name,
                 repo_url: $repo,
                 branch: $branch,
                 prompt: $user_prompt,
-                idempotent: true
-              }')")
+                idempotency_key: $idempotency_key
+              }'")")
 
           SESSION_ID=$(echo "$DEVIN_SESSION" | jq -r '.session_id')
           SESSION_URL=$(echo "$DEVIN_SESSION" | jq -r '.url')
