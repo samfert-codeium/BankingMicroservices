@@ -47,8 +47,17 @@ public class PaymentUtils {
     }
 
     public String hashCardNumber(String cardNumber) throws NoSuchAlgorithmException {
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        return new String(md.digest(cardNumber.getBytes()));
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        byte[] hashBytes = md.digest(cardNumber.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : hashBytes) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
     }
 
     public int generateTransactionId() {
