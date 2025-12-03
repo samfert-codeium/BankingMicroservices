@@ -259,7 +259,8 @@ jobs:
                 name: $name,
                 repo_url: $repo,
                 branch: $branch,
-                prompt: $user_prompt
+                prompt: $user_prompt,
+                idempotent: true
               }')")
 
           SESSION_ID=$(echo "$DEVIN_SESSION" | jq -r '.session_id')
