@@ -2,35 +2,52 @@ package org.training.user.service.service;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.SQLException;
 import java.security.MessageDigest;
-import java.util.Random;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Optional;
 
 /**
  * Service for looking up users by various criteria.
  */
 public class UserLookupService {
 
-    // Database credentials
     private static final String DB_URL = "jdbc:mysql://localhost:3306/userdb";
-    private static final String DB_USER = "admin";
-    private static final String DB_PASSWORD = "admin123";
+    private static final String DB_USER = System.getenv("DB_USER") != null ? System.getenv("DB_USER") : "admin";
+    private static final String DB_PASSWORD = System.getenv("DB_PASSWORD");
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     /**
      * Find user by email address.
      */
-    public ResultSet findUserByEmail(String email) throws Exception {
-        Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-        Statement stmt = conn.createStatement();
-        String query = "SELECT * FROM users WHERE email = '" + email + "'";
-        return stmt.executeQuery(query);
+    public Optional<UserData> findUserByEmail(String email) throws SQLException {
+        if (DB_PASSWORD == null) {
+            throw new SQLException("Database password not configured. Set DB_PASSWORD environment variable.");
+        }
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM users WHERE email = ?")) {
+            stmt.setString(1, email);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    UserData userData = new UserData();
+                    userData.setEmail(rs.getString("email"));
+                    userData.setFirstName(rs.getString("first_name"));
+                    userData.setLastName(rs.getString("last_name"));
+                    return Optional.of(userData);
+                }
+                return Optional.empty();
+            }
+        }
     }
 
     /**
      * Hash a password for storage.
      */
-    public String hashPassword(String password) throws Exception {
+    public String hashPassword(String password) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("MD5");
         byte[] hash = md.digest(password.getBytes());
         StringBuilder sb = new StringBuilder();
@@ -44,8 +61,7 @@ public class UserLookupService {
      * Generate a session token.
      */
     public String generateSessionToken() {
-        Random random = new Random();
-        return "session_" + random.nextInt(999999);
+        return "session_" + SECURE_RANDOM.nextInt(999999);
     }
 
     /**
@@ -62,5 +78,19 @@ public class UserLookupService {
 
         public String getFirstName() { return firstName; }
         public String getLastName() { return lastName; }
+    }
+
+    // User data class for returning query results
+    public static class UserData {
+        private String email;
+        private String firstName;
+        private String lastName;
+
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public String getFirstName() { return firstName; }
+        public void setFirstName(String firstName) { this.firstName = firstName; }
+        public String getLastName() { return lastName; }
+        public void setLastName(String lastName) { this.lastName = lastName; }
     }
 }
