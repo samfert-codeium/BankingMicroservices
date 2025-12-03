@@ -34,6 +34,7 @@ public class VulnerableCode {
 
     /**
      * FIXED: Uses parameterized queries to prevent SQL injection
+     * and properly closes resources with try-with-resources
      * @param username the username to search for
      * @return User object containing user data, or null if not found
      * @throws SQLException if database error occurs
