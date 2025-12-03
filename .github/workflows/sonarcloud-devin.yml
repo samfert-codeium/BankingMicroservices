@@ -161,11 +161,10 @@ jobs:
           echo "   - Code Smells: $CODE_SMELLS"
           echo "   - Security Hotspots: $SECURITY_HOTSPOTS"
 
-      - name: Trigger Devin Remediation (Human PR Only)
+      - name: Trigger Devin Remediation
         id: trigger-devin
         if: |
           steps.quality-gate.outcome == 'failure' &&
-          steps.check-devin.outputs.is_devin_commit == 'false' &&
           github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -236,17 +235,6 @@ jobs:
       - name: Fail if Quality Gate Failed
         if: steps.quality-gate.outcome == 'failure'
         run: |
-          if [[ "${{ steps.check-devin.outputs.is_devin_commit }}" == "true" ]]; then
-            echo "❌ Quality gate still failing after Devin remediation"
-            echo "🔍 Human review required"
-            echo ""
-            echo "Possible reasons:"
-            echo "  - Complex issues requiring architectural changes"
-            echo "  - False positives needing manual review"
-            echo "  - New issues introduced during remediation"
-          else
-            echo "❌ Quality gate failed"
-            echo "🤖 Devin AI has been triggered to remediate issues"
-            echo "⏳ Waiting for Devin to commit fixes..."
-          fi
+          echo "❌ Quality gate failed"
+          echo "🤖 Devin has been triggered to fix the issues"
           exit 1
