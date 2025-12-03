@@ -196,13 +196,12 @@ jobs:
               --arg repo "${{ github.server_url }}/${{ github.repository }}" \
               --arg branch "${{ github.head_ref }}" \
               --arg user_prompt "$USER_PROMPT" \
-              --arg idempotency_key "pr-${{ github.event.pull_request.number }}-run-${{ github.run_number }}" \
               '{
                 name: $name,
                 repo_url: $repo,
                 branch: $branch,
                 prompt: $user_prompt,
-                idempotency_key: $idempotency_key
+                idempotent: true
               }'")")
 
           SESSION_ID=$(echo "$DEVIN_SESSION" | jq -r '.session_id')
