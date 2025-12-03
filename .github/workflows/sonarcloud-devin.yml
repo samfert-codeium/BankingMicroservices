@@ -203,50 +203,28 @@ jobs:
 
           ## Your Mission
 
-          ### Phase 1: Analysis
-          Use the SonarQube MCP server or SONAR_TOKEN for REST API access to analyze ALL quality gate failures:
-          1. Query the quality gate status to understand which conditions failed
-          2. Retrieve detailed issue information for each category
-          3. Analyze coverage gaps if applicable
+          Fix the security vulnerabilities and bugs identified by SonarQube. Focus on:
 
-          ### Phase 2: Implement Fixes
-
-          **Security & Vulnerabilities:**
-          - SQL injection → Use parameterized queries
-          - XSS → Implement input validation and output encoding
-          - Weak cryptography → Use SHA-256+, SecureRandom
-          - Hardcoded credentials → Use environment variables
-
-          **Bugs & Reliability:**
-          - Null pointer exceptions → Add null checks or use Optional
+          **Security Fixes:**
+          - SQL injection → Use PreparedStatement with parameterized queries
+          - Hardcoded credentials → Move to environment variables or config
+          - Weak cryptography → Use SHA-256+ and SecureRandom
           - Resource leaks → Use try-with-resources
-          - Generic exceptions → Replace with specific types
 
-          **Code Smells:**
-          - Remove unused imports, variables, dead code
-          - Simplify complex methods
-          - Fix naming conventions
+          **Bug Fixes:**
+          - Null pointer risks → Add null checks
+          - Generic exceptions → Use specific exception types
 
-          ### Phase 3: Validation
-          - Run tests to verify fixes don't break functionality
-          - Ensure build completes successfully
+          ## Instructions
+          1. Clone the repo and checkout branch \`${{ github.head_ref }}\`
+          2. Fix ONLY the issues listed above - do not add tests or refactor unrelated code
+          3. Commit with message: \`fix: [devin-remediation] Resolve SonarQube issues\`
+          4. Push to branch \`${{ github.head_ref }}\`
 
-          ### Phase 4: Single Commit (CRITICAL)
-          - **Commit message:** \`fix: [devin-remediation] Resolve SonarQube quality gate failures\`
-          - **Push to branch:** \`${{ github.head_ref }}\`
-          - This triggers automatic re-scan
-
-          ## Detailed Issue Data
+          ## Issue Details
           \`\`\`json
           ${ISSUE_SUMMARY}
-          \`\`\`
-
-          ## Success Criteria
-          ✅ All vulnerabilities resolved
-          ✅ All bugs fixed
-          ✅ Critical code smells addressed
-          ✅ All tests pass
-          ✅ Quality gate passes on re-scan"
+          \`\`\`"
 
           # Create Devin session via API
           DEVIN_SESSION=$(curl -s -X POST "https://api.devin.ai/v1/sessions" \
