@@ -62,7 +62,7 @@ public class UserServiceImpl implements UserService {
     public Response createUser(CreateUser userDto) {
 
         List<UserRepresentation> userRepresentations = keycloakService.readUserByEmail(userDto.getEmailId());
-        if(userRepresentations.size() > 0) {
+        if(!userRepresentations.isEmpty()) {
             log.error("This emailId is already registered as a user");
             throw new ResourceConflictException("This emailId is already registered as a user");
         }
