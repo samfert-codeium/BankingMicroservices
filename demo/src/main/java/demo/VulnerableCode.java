@@ -1,0 +1,139 @@
+package demo;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.SecureRandom;
+import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+/**
+ * DEMO FILE: This file demonstrates secure coding practices
+ * that pass SonarQube quality gates.
+ */
+public class VulnerableCode {
+
+    // Use environment variables for credentials with defaults
+    private static final String DB_PASSWORD = getEnvOrDefault("DB_PASSWORD", "");
+    private static final String DB_USER = getEnvOrDefault("DB_USER", "root");
+    private static final String DB_URL = getEnvOrDefault("DB_URL", "jdbc:mysql://localhost:3306/banking");
+    
+    private static String getEnvOrDefault(String key, String defaultValue) {
+        String value = System.getenv(key);
+        return value != null ? value : defaultValue;
+    }
+
+    // Reuse SecureRandom instance
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    /**
+     * FIXED: Uses parameterized queries to prevent SQL injection
+     * and properly closes resources with try-with-resources
+     * @param username the username to search for
+     * @return true if user exists, false otherwise
+     * @throws SQLException if database error occurs
+     */
+    public boolean getUserByUsername(String username) throws SQLException {
+        String query = "SELECT * FROM users WHERE username = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, username);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    /**
+     * FIXED: Uses try-with-resources to properly close FileInputStream
+     * @param path the file path to read
+     * @return byte array containing file data
+     * @throws IOException if file read error occurs
+     */
+    public byte[] readFile(String path) throws IOException {
+        try (FileInputStream fis = new FileInputStream(path)) {
+            byte[] data = new byte[1024];
+            int bytesRead = fis.read(data);
+            if (bytesRead == -1) {
+                return new byte[0];
+            }
+            byte[] result = new byte[bytesRead];
+            System.arraycopy(data, 0, result, 0, bytesRead);
+            return result;
+        }
+    }
+
+    /**
+     * FIXED: Adds null check to prevent null pointer dereference
+     * @param user the user to process
+     * @return uppercase name or empty string if user/name is null
+     */
+    public String processUser(User user) {
+        if (user == null || user.getName() == null) {
+            return "";
+        }
+        return user.getName().toUpperCase();
+    }
+
+    /**
+     * FIXED: Uses strong AES-GCM encryption instead of weak DES
+     * @param data the data to encrypt
+     * @return encrypted data as hex string
+     * @throws java.security.GeneralSecurityException if encryption error occurs
+     */
+    public String encryptData(String data) throws java.security.GeneralSecurityException {
+        // Use AES-GCM which is a secure authenticated encryption mode
+        byte[] key = new byte[16];
+        SECURE_RANDOM.nextBytes(key);
+        SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
+        
+        byte[] iv = new byte[12];
+        SECURE_RANDOM.nextBytes(iv);
+        GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);
+        
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, gcmSpec);
+        byte[] encrypted = cipher.doFinal(data.getBytes());
+        
+        // Convert to hex string
+        StringBuilder sb = new StringBuilder();
+        for (byte b : encrypted) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * FIXED: Uses SecureRandom instead of java.util.Random for security
+     * @return a secure random token
+     */
+    public int generateToken() {
+        return SECURE_RANDOM.nextInt(1000000);
+    }
+
+    // Helper class
+    static class User {
+        private String name;
+
+        public User() {
+            // Default constructor
+        }
+
+        public User(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+}
