@@ -14,6 +14,11 @@ on:
     branches:
       - main
 
+env:
+  SONAR_TOKEN: c16899297a4b62c6a23fcb5533b32bbec17a6f89
+  SONAR_ORG: samfert-codeium
+  SONAR_PROJECT_KEY: samfert-codeium_BankingMicroservices
+
 jobs:
   security-scan:
     name: SonarQube Security Scan
@@ -43,15 +48,13 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
 
       - name: SonarQube Scan
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           # Using sonar-scanner CLI for flexibility
           curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
           unzip -q sonar-scanner.zip
           ./sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
-            -Dsonar.organization=${{ secrets.SONAR_ORG }} \
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
+            -Dsonar.organization=${{ env.SONAR_ORG }} \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.sources=. \
             -Dsonar.java.binaries=.
@@ -61,8 +64,6 @@ jobs:
         continue-on-error: true
         uses: SonarSource/sonarqube-quality-gate-action@master
         timeout-minutes: 5
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Check if Devin Remediation Commit
         id: check-devin
@@ -101,12 +102,12 @@ jobs:
           fi
 
           # Extract all issue types
-          ALL_ISSUES=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
-            "https://sonarcloud.io/api/issues/search?componentKeys=${{ secrets.SONAR_PROJECT_KEY }}${PR_PARAM}&resolved=false&ps=100")
+          ALL_ISSUES=$(curl -s -u "${{ env.SONAR_TOKEN }}:" \
+            "https://sonarcloud.io/api/issues/search?componentKeys=${{ env.SONAR_PROJECT_KEY }}${PR_PARAM}&resolved=false&ps=100")
 
           # Get quality gate status details
-          QG_STATUS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
-            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ secrets.SONAR_PROJECT_KEY }}${PR_PARAM}")
+          QG_STATUS=$(curl -s -u "${{ env.SONAR_TOKEN }}:" \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ env.SONAR_PROJECT_KEY }}${PR_PARAM}")
 
           # Extract metrics
           VULNERABILITIES=$(echo "$ALL_ISSUES" | jq '[.issues[] | select(.type=="VULNERABILITY")] | length')
@@ -189,7 +190,7 @@ jobs:
           - **Bugs:** ${BUGS} 🐛
           - **Code Smells:** ${CODE_SMELLS} 💨
           - **Security Hotspots:** ${SECURITY_HOTSPOTS} 🔥
-          - **Project:** ${{ secrets.SONAR_PROJECT_KEY }}
+          - **Project:** ${{ env.SONAR_PROJECT_KEY }}
           - **Branch:** ${{ github.head_ref }}
           - **PR:** #${{ github.event.pull_request.number }}
 
@@ -287,7 +288,7 @@ jobs:
 
           ### 🔗 Links
           - [👀 Monitor Devin Session]($SESSION_URL)
-          - [📊 SonarQube Dashboard](https://sonarcloud.io/dashboard?id=${{ secrets.SONAR_PROJECT_KEY }})
+          - [📊 SonarQube Dashboard](https://sonarcloud.io/dashboard?id=${{ env.SONAR_PROJECT_KEY }})
           - [🔧 GitHub Actions Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
           ---
