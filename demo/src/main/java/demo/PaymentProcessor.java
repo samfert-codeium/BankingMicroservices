@@ -14,16 +14,15 @@ public class PaymentProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(PaymentProcessor.class.getName());
 
-    // Database credentials from environment variables
-    private static final String DB_URL = System.getenv("DB_URL") != null 
-        ? System.getenv("DB_URL") 
-        : "jdbc:mysql://localhost:3306/payments";
-    private static final String DB_USER = System.getenv("DB_USER") != null 
-        ? System.getenv("DB_USER") 
-        : "payment_admin";
-    private static final String DB_PASSWORD = System.getenv("DB_PASSWORD") != null 
-        ? System.getenv("DB_PASSWORD") 
-        : "";
+    // Database credentials from environment variables with defaults
+    private static final String DB_URL = getEnvOrDefault("DB_URL", "jdbc:mysql://localhost:3306/payments");
+    private static final String DB_USER = getEnvOrDefault("DB_USER", "payment_admin");
+    private static final String DB_PASSWORD = getEnvOrDefault("DB_PASSWORD", "");
+    
+    private static String getEnvOrDefault(String key, String defaultValue) {
+        String value = System.getenv(key);
+        return value != null ? value : defaultValue;
+    }
 
     // Reusable SecureRandom instance for cryptographically secure random numbers
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();

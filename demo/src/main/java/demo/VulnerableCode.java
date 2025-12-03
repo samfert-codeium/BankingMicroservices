@@ -18,16 +18,15 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class VulnerableCode {
 
-    // Use environment variables for credentials
-    private static final String DB_PASSWORD = System.getenv("DB_PASSWORD") != null 
-        ? System.getenv("DB_PASSWORD") 
-        : "";
-    private static final String DB_USER = System.getenv("DB_USER") != null 
-        ? System.getenv("DB_USER") 
-        : "root";
-    private static final String DB_URL = System.getenv("DB_URL") != null 
-        ? System.getenv("DB_URL") 
-        : "jdbc:mysql://localhost:3306/banking";
+    // Use environment variables for credentials with defaults
+    private static final String DB_PASSWORD = getEnvOrDefault("DB_PASSWORD", "");
+    private static final String DB_USER = getEnvOrDefault("DB_USER", "root");
+    private static final String DB_URL = getEnvOrDefault("DB_URL", "jdbc:mysql://localhost:3306/banking");
+    
+    private static String getEnvOrDefault(String key, String defaultValue) {
+        String value = System.getenv(key);
+        return value != null ? value : defaultValue;
+    }
 
     // Reuse SecureRandom instance
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
