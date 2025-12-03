@@ -3,13 +3,19 @@ package demo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.security.GeneralSecurityException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for VulnerableCode class
- * Note: This class contains intentionally vulnerable code for demo purposes.
- * These tests exercise the code paths for coverage purposes.
+ * Tests exercise all code paths for coverage purposes.
  */
 class VulnerableCodeTest {
 
@@ -48,19 +54,52 @@ class VulnerableCodeTest {
         assertThrows(Exception.class, () -> vulnerableCode.readFile(null));
     }
 
-    // Tests for processUser method
-
     @Test
-    @DisplayName("processUser should throw exception for null user")
-    void processUser_withNullUser_throwsException() {
-        assertThrows(NullPointerException.class, () -> vulnerableCode.processUser(null));
+    @DisplayName("readFile should read file contents successfully")
+    void readFile_withValidFile_returnsContent(@TempDir Path tempDir) throws IOException {
+        File tempFile = tempDir.resolve("test.txt").toFile();
+        try (FileWriter writer = new FileWriter(tempFile)) {
+            writer.write("Hello World");
+        }
+        byte[] result = vulnerableCode.readFile(tempFile.getAbsolutePath());
+        assertNotNull(result);
+        assertTrue(result.length > 0);
+        assertEquals("Hello World", new String(result).trim());
     }
 
     @Test
-    @DisplayName("processUser should throw exception for user with null name")
-    void processUser_withUserHavingNullName_throwsException() {
+    @DisplayName("readFile should return empty array for empty file")
+    void readFile_withEmptyFile_returnsEmptyArray(@TempDir Path tempDir) throws IOException {
+        File tempFile = tempDir.resolve("empty.txt").toFile();
+        tempFile.createNewFile();
+        byte[] result = vulnerableCode.readFile(tempFile.getAbsolutePath());
+        assertNotNull(result);
+        assertEquals(0, result.length);
+    }
+
+    // Tests for processUser method
+
+    @Test
+    @DisplayName("processUser should return empty string for null user")
+    void processUser_withNullUser_returnsEmptyString() {
+        String result = vulnerableCode.processUser(null);
+        assertEquals("", result);
+    }
+
+    @Test
+    @DisplayName("processUser should return empty string for user with null name")
+    void processUser_withUserHavingNullName_returnsEmptyString() {
         VulnerableCode.User user = new VulnerableCode.User();
-        assertThrows(NullPointerException.class, () -> vulnerableCode.processUser(user));
+        String result = vulnerableCode.processUser(user);
+        assertEquals("", result);
+    }
+
+    @Test
+    @DisplayName("processUser should return uppercase name for valid user")
+    void processUser_withValidUser_returnsUppercaseName() {
+        VulnerableCode.User user = new VulnerableCode.User("john");
+        String result = vulnerableCode.processUser(user);
+        assertEquals("JOHN", result);
     }
 
     // Tests for encryptData method
@@ -73,15 +112,32 @@ class VulnerableCodeTest {
 
     @Test
     @DisplayName("encryptData should return non-null result")
-    void encryptData_withValidInput_returnsNonNull() throws Exception {
+    void encryptData_withValidInput_returnsNonNull() throws GeneralSecurityException {
         String result = vulnerableCode.encryptData("test data");
         assertNotNull(result);
+    }
+
+    @Test
+    @DisplayName("encryptData should return hex string")
+    void encryptData_withValidInput_returnsHexString() throws GeneralSecurityException {
+        String result = vulnerableCode.encryptData("test data");
+        assertNotNull(result);
+        assertTrue(result.matches("[0-9a-f]+"), "Result should be a hex string");
+    }
+
+    @Test
+    @DisplayName("encryptData should return different results for same input (due to random IV)")
+    void encryptData_withSameInput_returnsDifferentResults() throws GeneralSecurityException {
+        String result1 = vulnerableCode.encryptData("test data");
+        String result2 = vulnerableCode.encryptData("test data");
+        // Due to random IV, results should be different
+        assertNotEquals(result1, result2);
     }
 
     // Tests for generateToken method
 
     @Test
-    @DisplayName("generateToken should return a number")
+    @DisplayName("generateToken should return a number in valid range")
     void generateToken_returnsNumber() {
         int token = vulnerableCode.generateToken();
         assertTrue(token >= 0 && token < 1000000);
@@ -94,19 +150,32 @@ class VulnerableCodeTest {
         int token2 = vulnerableCode.generateToken();
         int token3 = vulnerableCode.generateToken();
         
-        // At least two should be different (statistically very likely)
+        // At least two should be different (statistically very likely with SecureRandom)
         boolean allSame = (token1 == token2) && (token2 == token3);
-        // This test might occasionally fail due to randomness, but it's very unlikely
-        // For demo purposes, we just verify the method runs without error
-        assertNotNull(token1);
+        assertFalse(allSame, "Tokens should not all be the same");
     }
 
     // Tests for User inner class
 
     @Test
-    @DisplayName("User getName should return null for new instance")
-    void user_getName_returnsNullForNewInstance() {
+    @DisplayName("User default constructor should create user with null name")
+    void user_defaultConstructor_createsUserWithNullName() {
         VulnerableCode.User user = new VulnerableCode.User();
         assertNull(user.getName());
+    }
+
+    @Test
+    @DisplayName("User constructor with name should set name")
+    void user_constructorWithName_setsName() {
+        VulnerableCode.User user = new VulnerableCode.User("Alice");
+        assertEquals("Alice", user.getName());
+    }
+
+    @Test
+    @DisplayName("User setName should update name")
+    void user_setName_updatesName() {
+        VulnerableCode.User user = new VulnerableCode.User();
+        user.setName("Bob");
+        assertEquals("Bob", user.getName());
     }
 }

@@ -2,87 +2,135 @@ package demo;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.SQLException;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.SecureRandom;
+import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
- * DEMO FILE: This file contains intentionally vulnerable code
- * that SonarQube will flag for the Devin remediation demo.
- *
- * Issues included:
- * 1. SQL Injection vulnerability
- * 2. Hardcoded credentials
- * 3. Resource leak (unclosed streams)
- * 4. Weak cryptography
- * 5. Null pointer dereference
+ * DEMO FILE: This file demonstrates secure coding practices
+ * that pass SonarQube quality gates.
  */
 public class VulnerableCode {
 
-    // VULNERABILITY: Hardcoded credentials (SonarQube rule: java:S2068)
-    private static final String DB_PASSWORD = "admin123";
-    private static final String DB_USER = "root";
-    private static final String SECRET_KEY = "mysecretkey12345";
+    // Use environment variables for credentials
+    private static final String DB_PASSWORD = System.getenv("DB_PASSWORD") != null 
+        ? System.getenv("DB_PASSWORD") 
+        : "";
+    private static final String DB_USER = System.getenv("DB_USER") != null 
+        ? System.getenv("DB_USER") 
+        : "root";
+    private static final String DB_URL = System.getenv("DB_URL") != null 
+        ? System.getenv("DB_URL") 
+        : "jdbc:mysql://localhost:3306/banking";
+
+    // Reuse SecureRandom instance
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     /**
-     * VULNERABILITY: SQL Injection (SonarQube rule: java:S3649)
-     * User input is directly concatenated into SQL query
+     * FIXED: Uses parameterized queries to prevent SQL injection
+     * @param username the username to search for
+     * @return ResultSet containing user data
+     * @throws SQLException if database error occurs
      */
-    public ResultSet getUserByUsername(String username) throws Exception {
-        Connection conn = DriverManager.getConnection(
-            "jdbc:mysql://localhost:3306/banking", DB_USER, DB_PASSWORD);
-        Statement stmt = conn.createStatement();
-
-        // BAD: SQL Injection vulnerability - user input directly in query
-        String query = "SELECT * FROM users WHERE username = '" + username + "'";
-        return stmt.executeQuery(query);
+    public ResultSet getUserByUsername(String username) throws SQLException {
+        Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        String query = "SELECT * FROM users WHERE username = ?";
+        PreparedStatement stmt = conn.prepareStatement(query);
+        stmt.setString(1, username);
+        return stmt.executeQuery();
     }
 
     /**
-     * VULNERABILITY: Resource leak (SonarQube rule: java:S2095)
-     * FileInputStream is never closed
+     * FIXED: Uses try-with-resources to properly close FileInputStream
+     * @param path the file path to read
+     * @return byte array containing file data
+     * @throws IOException if file read error occurs
      */
     public byte[] readFile(String path) throws IOException {
-        // BAD: Resource leak - stream is never closed
-        FileInputStream fis = new FileInputStream(path);
-        byte[] data = new byte[1024];
-        fis.read(data);
-        return data;
+        try (FileInputStream fis = new FileInputStream(path)) {
+            byte[] data = new byte[1024];
+            int bytesRead = fis.read(data);
+            if (bytesRead == -1) {
+                return new byte[0];
+            }
+            byte[] result = new byte[bytesRead];
+            System.arraycopy(data, 0, result, 0, bytesRead);
+            return result;
+        }
     }
 
     /**
-     * VULNERABILITY: Null pointer dereference (SonarQube rule: java:S2259)
+     * FIXED: Adds null check to prevent null pointer dereference
+     * @param user the user to process
+     * @return uppercase name or empty string if user/name is null
      */
     public String processUser(User user) {
-        // BAD: Potential null pointer dereference
+        if (user == null || user.getName() == null) {
+            return "";
+        }
         return user.getName().toUpperCase();
     }
 
     /**
-     * VULNERABILITY: Weak cryptography (SonarQube rule: java:S5542)
+     * FIXED: Uses strong AES-GCM encryption instead of weak DES
+     * @param data the data to encrypt
+     * @return encrypted data as hex string
+     * @throws java.security.GeneralSecurityException if encryption error occurs
      */
-    public String encryptData(String data) throws Exception {
-        // BAD: Using weak DES encryption
-        javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("DES");
-        return cipher.toString();
+    public String encryptData(String data) throws java.security.GeneralSecurityException {
+        // Use AES-GCM which is a secure authenticated encryption mode
+        byte[] key = new byte[16];
+        SECURE_RANDOM.nextBytes(key);
+        SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
+        
+        byte[] iv = new byte[12];
+        SECURE_RANDOM.nextBytes(iv);
+        GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);
+        
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, gcmSpec);
+        byte[] encrypted = cipher.doFinal(data.getBytes());
+        
+        // Convert to hex string
+        StringBuilder sb = new StringBuilder();
+        for (byte b : encrypted) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 
     /**
-     * VULNERABILITY: Insecure random (SonarQube rule: java:S2245)
+     * FIXED: Uses SecureRandom instead of java.util.Random for security
+     * @return a secure random token
      */
     public int generateToken() {
-        // BAD: Using insecure random for security-sensitive operation
-        java.util.Random random = new java.util.Random();
-        return random.nextInt(1000000);
+        return SECURE_RANDOM.nextInt(1000000);
     }
 
     // Helper class
     static class User {
         private String name;
 
+        public User() {
+            // Default constructor
+        }
+
+        public User(String name) {
+            this.name = name;
+        }
+
         public String getName() {
             return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
         }
     }
 }
