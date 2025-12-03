@@ -66,6 +66,8 @@ jobs:
         continue-on-error: true
         uses: SonarSource/sonarqube-quality-gate-action@master
         timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
 
       - name: Check if Devin Remediation Commit
         id: check-devin
