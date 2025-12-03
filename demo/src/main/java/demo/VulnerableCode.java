@@ -5,7 +5,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.logging.Logger;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -35,7 +34,6 @@ public class VulnerableCode {
 
     /**
      * FIXED: Uses parameterized queries to prevent SQL injection
-     * Note: Caller is responsible for closing the returned ResultSet
      * @param username the username to search for
      * @return User object containing user data, or null if not found
      * @throws SQLException if database error occurs
@@ -46,14 +44,24 @@ public class VulnerableCode {
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, username);
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    User user = new User();
-                    user.setName(rs.getString("username"));
-                    return user;
-                }
-                return null;
+                return extractUserFromResultSet(rs);
             }
         }
+    }
+
+    /**
+     * Extract user from ResultSet - separated for testability
+     * @param rs the ResultSet to extract from
+     * @return User object or null if no data
+     * @throws SQLException if database error occurs
+     */
+    protected User extractUserFromResultSet(ResultSet rs) throws SQLException {
+        if (rs.next()) {
+            User user = new User();
+            user.setName(rs.getString("username"));
+            return user;
+        }
+        return null;
     }
 
     /**

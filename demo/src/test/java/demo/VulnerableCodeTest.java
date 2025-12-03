@@ -40,6 +40,30 @@ class VulnerableCodeTest {
         assertThrows(Exception.class, () -> vulnerableCode.getUserByUsername(null));
     }
 
+    // Tests for extractUserFromResultSet method (using mock ResultSet)
+
+    @Test
+    @DisplayName("extractUserFromResultSet should return null for empty ResultSet")
+    void extractUserFromResultSet_withEmptyResultSet_returnsNull() throws Exception {
+        java.sql.ResultSet mockRs = org.mockito.Mockito.mock(java.sql.ResultSet.class);
+        org.mockito.Mockito.when(mockRs.next()).thenReturn(false);
+        
+        VulnerableCode.User result = vulnerableCode.extractUserFromResultSet(mockRs);
+        assertNull(result);
+    }
+
+    @Test
+    @DisplayName("extractUserFromResultSet should return User for valid ResultSet")
+    void extractUserFromResultSet_withValidResultSet_returnsUser() throws Exception {
+        java.sql.ResultSet mockRs = org.mockito.Mockito.mock(java.sql.ResultSet.class);
+        org.mockito.Mockito.when(mockRs.next()).thenReturn(true);
+        org.mockito.Mockito.when(mockRs.getString("username")).thenReturn("testuser");
+        
+        VulnerableCode.User result = vulnerableCode.extractUserFromResultSet(mockRs);
+        assertNotNull(result);
+        assertEquals("testuser", result.getName());
+    }
+
     // Tests for readFile method
 
     @Test
