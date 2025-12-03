@@ -18,6 +18,7 @@ env:
   SONAR_TOKEN: c16899297a4b62c6a23fcb5533b32bbec17a6f89
   SONAR_ORG: samfert-codeium
   SONAR_PROJECT_KEY: samfert-codeium_BankingMicroservices
+  DEVIN_API_KEY: apk_user_Z29vZ2xlLW9hdXRoMnwxMTEzNTM1ODQ4MjE5NzA5NzY2NDFfb3JnLTMwOWM2NTQ1N2FhMjQyMGNhZjc4NzQ2ZjI5ZTY3YjkxOjAxYTFiMDJiNGVmNDQyM2FiZmYwMTk2ZjMwYTcwOTRj
 
 jobs:
   security-scan:
@@ -165,7 +166,6 @@ jobs:
           steps.check-devin.outputs.is_devin_commit == 'false' &&
           github.event_name == 'pull_request'
         env:
-          DEVIN_API_KEY: ${{ secrets.DEVIN_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "🤖 Triggering Devin AI Quality Gate Remediation..."
@@ -248,7 +248,7 @@ jobs:
 
           # Create Devin session via API
           DEVIN_SESSION=$(curl -s -X POST "https://api.devin.ai/v1/sessions" \
-            -H "Authorization: Bearer $DEVIN_API_KEY" \
+            -H "Authorization: Bearer ${{ env.DEVIN_API_KEY }}" \
             -H "Content-Type: application/json" \
             -d "$(jq -n \
               --arg name "SonarQube Remediation - PR #${{ github.event.pull_request.number }}" \
