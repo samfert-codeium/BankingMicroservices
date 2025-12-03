@@ -1,0 +1,316 @@
+name: SonarQube Quality Gate + Devin Remediation
+
+on:
+  # Manual trigger for demo - avoids conflict with other PR workflows
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to scan (leave empty for current branch)'
+        required: false
+        type: string
+  # Also runs on PRs to specific branches for the demo flow
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+
+jobs:
+  security-scan:
+    name: SonarQube Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: SonarQube Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          # Using sonar-scanner CLI for flexibility
+          curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          unzip -q sonar-scanner.zip
+          ./sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
+            -Dsonar.organization=${{ secrets.SONAR_ORG }} \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.sources=. \
+            -Dsonar.java.binaries=.
+
+      - name: Quality Gate Check
+        id: quality-gate
+        continue-on-error: true
+        uses: SonarSource/sonarqube-quality-gate-action@master
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Check if Devin Remediation Commit
+        id: check-devin
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            git fetch origin ${{ github.head_ref }}
+            COMMIT_AUTHOR=$(git log -1 --format='%an' origin/${{ github.head_ref }})
+            COMMIT_MSG=$(git log -1 --format='%s' origin/${{ github.head_ref }})
+            echo "Checking PR commit - Author: $COMMIT_AUTHOR"
+            echo "Commit message: $COMMIT_MSG"
+          else
+            COMMIT_AUTHOR="${{ github.event.head_commit.author.name }}"
+            COMMIT_MSG="${{ github.event.head_commit.message }}"
+            echo "Checking push commit - Author: $COMMIT_AUTHOR"
+          fi
+
+          # Check for Devin AI commits or [devin-remediation] tag
+          if [[ "$COMMIT_AUTHOR" == "Devin AI" ]] || [[ "$COMMIT_MSG" == *"[devin-remediation]"* ]]; then
+            echo "is_devin_commit=true" >> $GITHUB_OUTPUT
+            echo "🤖 Detected Devin remediation commit - skipping new session trigger"
+          else
+            echo "is_devin_commit=false" >> $GITHUB_OUTPUT
+            echo "👤 Human commit detected"
+          fi
+
+      - name: Extract Quality Gate Failure Details
+        id: extract-issues
+        if: steps.quality-gate.outcome == 'failure'
+        run: |
+          echo "📊 Extracting quality gate failure details from SonarQube..."
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            PR_PARAM="&pullRequest=${{ github.event.pull_request.number }}"
+          else
+            PR_PARAM=""
+          fi
+
+          # Extract all issue types
+          ALL_ISSUES=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+            "https://sonarcloud.io/api/issues/search?componentKeys=${{ secrets.SONAR_PROJECT_KEY }}${PR_PARAM}&resolved=false&ps=100")
+
+          # Get quality gate status details
+          QG_STATUS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ secrets.SONAR_PROJECT_KEY }}${PR_PARAM}")
+
+          # Extract metrics
+          VULNERABILITIES=$(echo "$ALL_ISSUES" | jq '[.issues[] | select(.type=="VULNERABILITY")] | length')
+          BUGS=$(echo "$ALL_ISSUES" | jq '[.issues[] | select(.type=="BUG")] | length')
+          CODE_SMELLS=$(echo "$ALL_ISSUES" | jq '[.issues[] | select(.type=="CODE_SMELL")] | length')
+          SECURITY_HOTSPOTS=$(echo "$ALL_ISSUES" | jq '[.issues[] | select(.type=="SECURITY_HOTSPOT")] | length')
+          TOTAL_ISSUES=$(echo "$ALL_ISSUES" | jq '.total')
+
+          # Extract failed conditions
+          FAILED_CONDITIONS=$(echo "$QG_STATUS" | jq -c '[.projectStatus.conditions[] | select(.status=="ERROR") | {metric: .metricKey, actual: .actualValue, threshold: .errorThreshold}]')
+
+          # Create issue summary
+          ISSUE_SUMMARY=$(echo "$ALL_ISSUES" | jq -c --arg vuln "$VULNERABILITIES" --arg bugs "$BUGS" --arg smells "$CODE_SMELLS" --arg hotspots "$SECURITY_HOTSPOTS" '{
+            total: .total,
+            vulnerabilities: ($vuln | tonumber),
+            bugs: ($bugs | tonumber),
+            code_smells: ($smells | tonumber),
+            security_hotspots: ($hotspots | tonumber),
+            issues: [.issues[] | {
+              key: .key,
+              type: .type,
+              severity: .severity,
+              message: .message,
+              component: .component,
+              line: .line,
+              rule: .rule
+            }]
+          }')
+
+          echo "total_issues=$TOTAL_ISSUES" >> $GITHUB_OUTPUT
+          echo "vulnerabilities=$VULNERABILITIES" >> $GITHUB_OUTPUT
+          echo "bugs=$BUGS" >> $GITHUB_OUTPUT
+          echo "code_smells=$CODE_SMELLS" >> $GITHUB_OUTPUT
+          echo "security_hotspots=$SECURITY_HOTSPOTS" >> $GITHUB_OUTPUT
+
+          echo "issue_summary<<EOF" >> $GITHUB_OUTPUT
+          echo "$ISSUE_SUMMARY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "failed_conditions<<EOF" >> $GITHUB_OUTPUT
+          echo "$FAILED_CONDITIONS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "⚠️  Quality Gate Failures:"
+          echo "   - Total Issues: $TOTAL_ISSUES"
+          echo "   - Vulnerabilities: $VULNERABILITIES"
+          echo "   - Bugs: $BUGS"
+          echo "   - Code Smells: $CODE_SMELLS"
+          echo "   - Security Hotspots: $SECURITY_HOTSPOTS"
+
+      - name: Trigger Devin Remediation (Human PR Only)
+        id: trigger-devin
+        if: |
+          steps.quality-gate.outcome == 'failure' &&
+          steps.check-devin.outputs.is_devin_commit == 'false' &&
+          github.event_name == 'pull_request'
+        env:
+          DEVIN_API_KEY: ${{ secrets.DEVIN_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🤖 Triggering Devin AI Quality Gate Remediation..."
+
+          TOTAL_ISSUES="${{ steps.extract-issues.outputs.total_issues }}"
+          VULNERABILITIES="${{ steps.extract-issues.outputs.vulnerabilities }}"
+          BUGS="${{ steps.extract-issues.outputs.bugs }}"
+          CODE_SMELLS="${{ steps.extract-issues.outputs.code_smells }}"
+          SECURITY_HOTSPOTS="${{ steps.extract-issues.outputs.security_hotspots }}"
+          ISSUE_SUMMARY='${{ steps.extract-issues.outputs.issue_summary }}'
+          FAILED_CONDITIONS='${{ steps.extract-issues.outputs.failed_conditions }}'
+
+          # User prompt with all context
+          USER_PROMPT="## SonarQube Quality Gate Remediation Required
+
+          ## Quality Gate Status
+          ❌ **FAILED** - Quality gate conditions not met
+
+          ## Issue Summary
+          - **Total Issues:** ${TOTAL_ISSUES}
+          - **Vulnerabilities:** ${VULNERABILITIES} 🔴
+          - **Bugs:** ${BUGS} 🐛
+          - **Code Smells:** ${CODE_SMELLS} 💨
+          - **Security Hotspots:** ${SECURITY_HOTSPOTS} 🔥
+          - **Project:** ${{ secrets.SONAR_PROJECT_KEY }}
+          - **Branch:** ${{ github.head_ref }}
+          - **PR:** #${{ github.event.pull_request.number }}
+
+          ## Failed Quality Gate Conditions
+          \`\`\`json
+          ${FAILED_CONDITIONS}
+          \`\`\`
+
+          ## Your Mission
+
+          ### Phase 1: Analysis
+          Use the SonarQube MCP server or SONAR_TOKEN for REST API access to analyze ALL quality gate failures:
+          1. Query the quality gate status to understand which conditions failed
+          2. Retrieve detailed issue information for each category
+          3. Analyze coverage gaps if applicable
+
+          ### Phase 2: Implement Fixes
+
+          **Security & Vulnerabilities:**
+          - SQL injection → Use parameterized queries
+          - XSS → Implement input validation and output encoding
+          - Weak cryptography → Use SHA-256+, SecureRandom
+          - Hardcoded credentials → Use environment variables
+
+          **Bugs & Reliability:**
+          - Null pointer exceptions → Add null checks or use Optional
+          - Resource leaks → Use try-with-resources
+          - Generic exceptions → Replace with specific types
+
+          **Code Smells:**
+          - Remove unused imports, variables, dead code
+          - Simplify complex methods
+          - Fix naming conventions
+
+          ### Phase 3: Validation
+          - Run tests to verify fixes don't break functionality
+          - Ensure build completes successfully
+
+          ### Phase 4: Single Commit (CRITICAL)
+          - **Commit message:** \`fix: [devin-remediation] Resolve SonarQube quality gate failures\`
+          - **Push to branch:** \`${{ github.head_ref }}\`
+          - This triggers automatic re-scan
+
+          ## Detailed Issue Data
+          \`\`\`json
+          ${ISSUE_SUMMARY}
+          \`\`\`
+
+          ## Success Criteria
+          ✅ All vulnerabilities resolved
+          ✅ All bugs fixed
+          ✅ Critical code smells addressed
+          ✅ All tests pass
+          ✅ Quality gate passes on re-scan"
+
+          # Create Devin session via API
+          DEVIN_SESSION=$(curl -s -X POST "https://api.devin.ai/v1/sessions" \
+            -H "Authorization: Bearer $DEVIN_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n \
+              --arg name "SonarQube Remediation - PR #${{ github.event.pull_request.number }}" \
+              --arg repo "${{ github.server_url }}/${{ github.repository }}" \
+              --arg branch "${{ github.head_ref }}" \
+              --arg user_prompt "$USER_PROMPT" \
+              '{
+                name: $name,
+                repo_url: $repo,
+                branch: $branch,
+                prompt: $user_prompt
+              }')")
+
+          SESSION_ID=$(echo "$DEVIN_SESSION" | jq -r '.session_id')
+          SESSION_URL=$(echo "$DEVIN_SESSION" | jq -r '.url')
+
+          if [ "$SESSION_ID" == "null" ] || [ -z "$SESSION_ID" ]; then
+            echo "❌ Failed to create Devin session"
+            echo "$DEVIN_SESSION"
+          else
+            echo "✅ Devin session created successfully"
+            echo "   Session ID: $SESSION_ID"
+            echo "   Session URL: $SESSION_URL"
+
+            # Post comment to PR
+            cat << EOF > devin-comment.md
+          ## 🤖 Devin AI Quality Gate Remediation Triggered
+
+          A SonarQube Quality Gate Remediation Specialist (Devin AI) has been assigned to fix all quality gate failures.
+
+          ### 📊 Quality Gate Analysis
+          - **Total Issues:** ${TOTAL_ISSUES}
+          - **Vulnerabilities:** ${VULNERABILITIES} 🔴
+          - **Bugs:** ${BUGS} 🐛
+          - **Code Smells:** ${CODE_SMELLS} 💨
+          - **Security Hotspots:** ${SECURITY_HOTSPOTS} 🔥
+
+          ### 🔗 Links
+          - [👀 Monitor Devin Session]($SESSION_URL)
+          - [📊 SonarQube Dashboard](https://sonarcloud.io/dashboard?id=${{ secrets.SONAR_PROJECT_KEY }})
+          - [🔧 GitHub Actions Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+          ---
+          **Note:** Devin will push a fix to this branch. The workflow will automatically re-run to validate.
+          EOF
+
+            gh pr comment ${{ github.event.pull_request.number }} --body-file devin-comment.md
+          fi
+
+      - name: Fail if Quality Gate Failed
+        if: steps.quality-gate.outcome == 'failure'
+        run: |
+          if [[ "${{ steps.check-devin.outputs.is_devin_commit }}" == "true" ]]; then
+            echo "❌ Quality gate still failing after Devin remediation"
+            echo "🔍 Human review required"
+            echo ""
+            echo "Possible reasons:"
+            echo "  - Complex issues requiring architectural changes"
+            echo "  - False positives needing manual review"
+            echo "  - New issues introduced during remediation"
+          else
+            echo "❌ Quality gate failed"
+            echo "🤖 Devin AI has been triggered to remediate issues"
+            echo "⏳ Waiting for Devin to commit fixes..."
+          fi
+          exit 1
