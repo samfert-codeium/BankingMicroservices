@@ -48,19 +48,56 @@ class VulnerableCodeTest {
         assertThrows(Exception.class, () -> vulnerableCode.readFile(null));
     }
 
-    // Tests for processUser method
-
     @Test
-    @DisplayName("processUser should throw exception for null user")
-    void processUser_withNullUser_throwsException() {
-        assertThrows(NullPointerException.class, () -> vulnerableCode.processUser(null));
+    @DisplayName("readFile should read valid file content")
+    void readFile_withValidFile_returnsContent() throws Exception {
+        // Create a temporary file for testing
+        java.io.File tempFile = java.io.File.createTempFile("test", ".txt");
+        tempFile.deleteOnExit();
+        java.io.FileOutputStream fos = new java.io.FileOutputStream(tempFile);
+        fos.write("test content".getBytes());
+        fos.close();
+        
+        byte[] result = vulnerableCode.readFile(tempFile.getAbsolutePath());
+        assertNotNull(result);
+        assertTrue(result.length > 0);
     }
 
     @Test
-    @DisplayName("processUser should throw exception for user with null name")
-    void processUser_withUserHavingNullName_throwsException() {
+    @DisplayName("readFile should handle empty file")
+    void readFile_withEmptyFile_returnsEmptyArray() throws Exception {
+        java.io.File tempFile = java.io.File.createTempFile("empty", ".txt");
+        tempFile.deleteOnExit();
+        
+        byte[] result = vulnerableCode.readFile(tempFile.getAbsolutePath());
+        assertNotNull(result);
+        assertEquals(0, result.length);
+    }
+
+    // Tests for processUser method
+
+    @Test
+    @DisplayName("processUser should return empty string for null user")
+    void processUser_withNullUser_returnsEmptyString() {
+        String result = vulnerableCode.processUser(null);
+        assertEquals("", result);
+    }
+
+    @Test
+    @DisplayName("processUser should return empty string for user with null name")
+    void processUser_withUserHavingNullName_returnsEmptyString() {
         VulnerableCode.User user = new VulnerableCode.User();
-        assertThrows(NullPointerException.class, () -> vulnerableCode.processUser(user));
+        String result = vulnerableCode.processUser(user);
+        assertEquals("", result);
+    }
+
+    @Test
+    @DisplayName("processUser should return uppercase name for valid user")
+    void processUser_withValidUser_returnsUppercaseName() {
+        VulnerableCode.User user = new VulnerableCode.User();
+        user.setName("testuser");
+        String result = vulnerableCode.processUser(user);
+        assertEquals("TESTUSER", result);
     }
 
     // Tests for encryptData method
@@ -108,5 +145,13 @@ class VulnerableCodeTest {
     void user_getName_returnsNullForNewInstance() {
         VulnerableCode.User user = new VulnerableCode.User();
         assertNull(user.getName());
+    }
+
+    @Test
+    @DisplayName("User setName and getName should work correctly")
+    void user_setNameAndGetName_worksCorrectly() {
+        VulnerableCode.User user = new VulnerableCode.User();
+        user.setName("John Doe");
+        assertEquals("John Doe", user.getName());
     }
 }
