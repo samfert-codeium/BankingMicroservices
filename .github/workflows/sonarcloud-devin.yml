@@ -1,4 +1,4 @@
-name: SonarQube Quality Gate + Devin Remediation
+name: CI
 
 on:
   # Manual trigger for demo - avoids conflict with other PR workflows
@@ -21,8 +21,8 @@ env:
   DEVIN_API_KEY: apk_user_Z29vZ2xlLW9hdXRoMnwxMTEzNTM1ODQ4MjE5NzA5NzY2NDFfb3JnLTMwOWM2NTQ1N2FhMjQyMGNhZjc4NzQ2ZjI5ZTY3YjkxOjAxYTFiMDJiNGVmNDQyM2FiZmYwMTk2ZjMwYTcwOTRj
 
 jobs:
-  security-scan:
-    name: SonarQube Security Scan
+  build:
+    name: Build & Test
     runs-on: ubuntu-latest
     permissions:
       contents: read
