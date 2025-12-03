@@ -180,51 +180,11 @@ jobs:
           ISSUE_SUMMARY='${{ steps.extract-issues.outputs.issue_summary }}'
           FAILED_CONDITIONS='${{ steps.extract-issues.outputs.failed_conditions }}'
 
-          # User prompt with all context
-          USER_PROMPT="## SonarQube Quality Gate Remediation Required
+          # User prompt - simple and direct
+          USER_PROMPT="Fix the SonarQube issues on branch ${{ github.head_ref }} and push your fix.
 
-          ## Quality Gate Status
-          ❌ **FAILED** - Quality gate conditions not met
-
-          ## Issue Summary
-          - **Total Issues:** ${TOTAL_ISSUES}
-          - **Vulnerabilities:** ${VULNERABILITIES} 🔴
-          - **Bugs:** ${BUGS} 🐛
-          - **Code Smells:** ${CODE_SMELLS} 💨
-          - **Security Hotspots:** ${SECURITY_HOTSPOTS} 🔥
-          - **Project:** ${{ env.SONAR_PROJECT_KEY }}
-          - **Branch:** ${{ github.head_ref }}
-          - **PR:** #${{ github.event.pull_request.number }}
-
-          ## Failed Quality Gate Conditions
-          \`\`\`json
-          ${FAILED_CONDITIONS}
-          \`\`\`
-
-          ## Your Mission
-
-          Fix the security vulnerabilities and bugs identified by SonarQube. Focus on:
-
-          **Security Fixes:**
-          - SQL injection → Use PreparedStatement with parameterized queries
-          - Hardcoded credentials → Move to environment variables or config
-          - Weak cryptography → Use SHA-256+ and SecureRandom
-          - Resource leaks → Use try-with-resources
-
-          **Bug Fixes:**
-          - Null pointer risks → Add null checks
-          - Generic exceptions → Use specific exception types
-
-          ## Instructions
-          1. Clone the repo and checkout branch \`${{ github.head_ref }}\`
-          2. Fix ONLY the issues listed above - do not add tests or refactor unrelated code
-          3. Commit with message: \`fix: [devin-remediation] Resolve SonarQube issues\`
-          4. Push to branch \`${{ github.head_ref }}\`
-
-          ## Issue Details
-          \`\`\`json
-          ${ISSUE_SUMMARY}
-          \`\`\`"
+          Issues to fix:
+          ${ISSUE_SUMMARY}"
 
           # Create Devin session via API
           DEVIN_SESSION=$(curl -s -X POST "https://api.devin.ai/v1/sessions" \
