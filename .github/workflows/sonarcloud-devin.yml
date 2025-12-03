@@ -145,12 +145,11 @@ jobs:
           echo "code_smells=$CODE_SMELLS" >> $GITHUB_OUTPUT
           echo "security_hotspots=$SECURITY_HOTSPOTS" >> $GITHUB_OUTPUT
 
-          echo "issue_summary<<EOF" >> $GITHUB_OUTPUT
-          echo "$ISSUE_SUMMARY" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # Create formatted issue list for Devin prompt
+          FORMATTED_ISSUES=$(echo "$ALL_ISSUES" | jq -r '.issues[] | "- [\(.severity)] \(.message) (\(.component | split(":") | .[-1]):\(.line))"')
 
-          echo "failed_conditions<<EOF" >> $GITHUB_OUTPUT
-          echo "$FAILED_CONDITIONS" >> $GITHUB_OUTPUT
+          echo "formatted_issues<<EOF" >> $GITHUB_OUTPUT
+          echo "$FORMATTED_ISSUES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
           echo "⚠️  Quality Gate Failures:"
@@ -176,14 +175,13 @@ jobs:
           BUGS="${{ steps.extract-issues.outputs.bugs }}"
           CODE_SMELLS="${{ steps.extract-issues.outputs.code_smells }}"
           SECURITY_HOTSPOTS="${{ steps.extract-issues.outputs.security_hotspots }}"
-          ISSUE_SUMMARY='${{ steps.extract-issues.outputs.issue_summary }}'
-          FAILED_CONDITIONS='${{ steps.extract-issues.outputs.failed_conditions }}'
+          FORMATTED_ISSUES='${{ steps.extract-issues.outputs.formatted_issues }}'
 
           # User prompt - simple and direct
           USER_PROMPT="Fix the SonarQube issues on branch ${{ github.head_ref }} and push your fix.
 
           Issues to fix:
-          ${ISSUE_SUMMARY}"
+          ${FORMATTED_ISSUES}"
 
           # Create Devin session via API
           DEVIN_SESSION=$(curl -s -X POST "https://api.devin.ai/v1/sessions" \
