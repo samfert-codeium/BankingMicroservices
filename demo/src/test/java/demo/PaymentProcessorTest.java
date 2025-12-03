@@ -204,6 +204,119 @@ class PaymentProcessorTest {
         assertFalse(result);
     }
 
+    // Additional tests for hashPaymentData method
+
+    @Test
+    @DisplayName("hashPaymentData should handle special characters")
+    void hashPaymentData_withSpecialCharacters_returnsHash() {
+        String hash = paymentProcessor.hashPaymentData("!@#$%^&*()_+-=[]{}|;':\",./<>?");
+        assertNotNull(hash);
+        assertEquals(64, hash.length());
+    }
+
+    @Test
+    @DisplayName("hashPaymentData should handle unicode characters")
+    void hashPaymentData_withUnicodeCharacters_returnsHash() {
+        String hash = paymentProcessor.hashPaymentData("日本語テスト");
+        assertNotNull(hash);
+        assertEquals(64, hash.length());
+    }
+
+    @Test
+    @DisplayName("hashPaymentData should handle long string")
+    void hashPaymentData_withLongString_returnsHash() {
+        StringBuilder longString = new StringBuilder();
+        for (int i = 0; i < 10000; i++) {
+            longString.append("a");
+        }
+        String hash = paymentProcessor.hashPaymentData(longString.toString());
+        assertNotNull(hash);
+        assertEquals(64, hash.length());
+    }
+
+    // Additional tests for generateTransactionId method
+
+    @Test
+    @DisplayName("generateTransactionId should generate many unique IDs")
+    void generateTransactionId_manyCallsReturnUniqueIds() {
+        java.util.Set<String> ids = new java.util.HashSet<>();
+        for (int i = 0; i < 100; i++) {
+            ids.add(paymentProcessor.generateTransactionId());
+        }
+        // Most IDs should be unique (allowing for some collisions)
+        assertTrue(ids.size() > 90, "Most IDs should be unique");
+    }
+
+    // Additional tests for validateAccount method
+
+    @Test
+    @DisplayName("validateAccount should return false for PENDING status")
+    void validateAccount_withPendingStatus_returnsFalse() {
+        PaymentProcessor.Account account = createAccount("PENDING", 100.0);
+        boolean result = paymentProcessor.validateAccount(account);
+        assertFalse(result);
+    }
+
+    @Test
+    @DisplayName("validateAccount should return false for CLOSED status")
+    void validateAccount_withClosedStatus_returnsFalse() {
+        PaymentProcessor.Account account = createAccount("CLOSED", 100.0);
+        boolean result = paymentProcessor.validateAccount(account);
+        assertFalse(result);
+    }
+
+    @Test
+    @DisplayName("validateAccount should return true for ACTIVE status with large balance")
+    void validateAccount_withLargeBalance_returnsTrue() {
+        PaymentProcessor.Account account = createAccount("ACTIVE", 1000000.0);
+        boolean result = paymentProcessor.validateAccount(account);
+        assertTrue(result);
+    }
+
+    @Test
+    @DisplayName("validateAccount should return true for ACTIVE status with small positive balance")
+    void validateAccount_withSmallPositiveBalance_returnsTrue() {
+        PaymentProcessor.Account account = createAccount("ACTIVE", 0.01);
+        boolean result = paymentProcessor.validateAccount(account);
+        assertTrue(result);
+    }
+
+    // Additional tests for logPayment method
+
+    @Test
+    @DisplayName("logPayment should handle very long card number")
+    void logPayment_withVeryLongCardNumber_doesNotThrow() {
+        assertDoesNotThrow(() -> paymentProcessor.logPayment("12345678901234567890123456789012345678901234567890", "100.00"));
+    }
+
+    @Test
+    @DisplayName("logPayment should handle card number with exactly 4 characters")
+    void logPayment_withExactly4CharCardNumber_doesNotThrow() {
+        assertDoesNotThrow(() -> paymentProcessor.logPayment("1234", "100.00"));
+    }
+
+    @Test
+    @DisplayName("logPayment should handle card number with 5 characters")
+    void logPayment_with5CharCardNumber_doesNotThrow() {
+        assertDoesNotThrow(() -> paymentProcessor.logPayment("12345", "100.00"));
+    }
+
+    // Additional tests for processPayment method
+
+    @Test
+    @DisplayName("processPayment should handle empty strings")
+    void processPayment_withEmptyStrings_returnsFalse() {
+        boolean result = paymentProcessor.processPayment("", "", "");
+        assertFalse(result);
+    }
+
+    @Test
+    @DisplayName("processPayment should handle special characters in description")
+    void processPayment_withSpecialCharactersInDescription_returnsFalse() {
+        boolean result = paymentProcessor.processPayment("ACC123", "100.00", "Test payment with special chars: !@#$%");
+        assertFalse(result);
+    }
+
     // Helper method to create Account instances using reflection
     private PaymentProcessor.Account createAccount(String status, double balance) {
         try {

@@ -178,4 +178,113 @@ class VulnerableCodeTest {
         user.setName("Bob");
         assertEquals("Bob", user.getName());
     }
+
+    // Additional tests for getUserByUsername method
+
+    @Test
+    @DisplayName("getUserByUsername should throw SQLException with empty username")
+    void getUserByUsername_withEmptyUsername_throwsException() {
+        assertThrows(java.sql.SQLException.class, () -> vulnerableCode.getUserByUsername(""));
+    }
+
+    @Test
+    @DisplayName("getUserByUsername should throw SQLException with special characters")
+    void getUserByUsername_withSpecialCharacters_throwsException() {
+        assertThrows(java.sql.SQLException.class, () -> vulnerableCode.getUserByUsername("user'; DROP TABLE users;--"));
+    }
+
+    // Additional tests for encryptData method
+
+    @Test
+    @DisplayName("encryptData should handle empty string")
+    void encryptData_withEmptyString_returnsNonNull() throws GeneralSecurityException {
+        String result = vulnerableCode.encryptData("");
+        assertNotNull(result);
+        assertTrue(result.length() > 0);
+    }
+
+    @Test
+    @DisplayName("encryptData should handle long string")
+    void encryptData_withLongString_returnsNonNull() throws GeneralSecurityException {
+        StringBuilder longString = new StringBuilder();
+        for (int i = 0; i < 1000; i++) {
+            longString.append("a");
+        }
+        String result = vulnerableCode.encryptData(longString.toString());
+        assertNotNull(result);
+        assertTrue(result.length() > 0);
+    }
+
+    @Test
+    @DisplayName("encryptData should handle special characters")
+    void encryptData_withSpecialCharacters_returnsNonNull() throws GeneralSecurityException {
+        String result = vulnerableCode.encryptData("!@#$%^&*()_+-=[]{}|;':\",./<>?");
+        assertNotNull(result);
+        assertTrue(result.length() > 0);
+    }
+
+    // Additional tests for generateToken method
+
+    @Test
+    @DisplayName("generateToken should return values in range multiple times")
+    void generateToken_multipleCallsReturnValidRange() {
+        for (int i = 0; i < 100; i++) {
+            int token = vulnerableCode.generateToken();
+            assertTrue(token >= 0 && token < 1000000, "Token should be in valid range");
+        }
+    }
+
+    // Additional tests for processUser method
+
+    @Test
+    @DisplayName("processUser should handle user with empty name")
+    void processUser_withEmptyName_returnsEmptyString() {
+        VulnerableCode.User user = new VulnerableCode.User("");
+        String result = vulnerableCode.processUser(user);
+        assertEquals("", result);
+    }
+
+    @Test
+    @DisplayName("processUser should handle user with whitespace name")
+    void processUser_withWhitespaceName_returnsUppercase() {
+        VulnerableCode.User user = new VulnerableCode.User("  ");
+        String result = vulnerableCode.processUser(user);
+        assertEquals("  ", result);
+    }
+
+    @Test
+    @DisplayName("processUser should handle user with mixed case name")
+    void processUser_withMixedCaseName_returnsUppercase() {
+        VulnerableCode.User user = new VulnerableCode.User("JoHn DoE");
+        String result = vulnerableCode.processUser(user);
+        assertEquals("JOHN DOE", result);
+    }
+
+    // Additional tests for readFile method
+
+    @Test
+    @DisplayName("readFile should handle file with special characters in content")
+    void readFile_withSpecialCharacters_returnsContent(@TempDir Path tempDir) throws IOException {
+        File tempFile = tempDir.resolve("special.txt").toFile();
+        String specialContent = "!@#$%^&*()_+-=[]{}|;':\",./<>?";
+        try (FileWriter writer = new FileWriter(tempFile)) {
+            writer.write(specialContent);
+        }
+        byte[] result = vulnerableCode.readFile(tempFile.getAbsolutePath());
+        assertNotNull(result);
+        assertEquals(specialContent, new String(result));
+    }
+
+    @Test
+    @DisplayName("readFile should handle file with newlines")
+    void readFile_withNewlines_returnsContent(@TempDir Path tempDir) throws IOException {
+        File tempFile = tempDir.resolve("newlines.txt").toFile();
+        String content = "line1\nline2\nline3";
+        try (FileWriter writer = new FileWriter(tempFile)) {
+            writer.write(content);
+        }
+        byte[] result = vulnerableCode.readFile(tempFile.getAbsolutePath());
+        assertNotNull(result);
+        assertEquals(content, new String(result));
+    }
 }
