@@ -210,9 +210,9 @@ jobs:
 
             # Post comment to PR
             cat << EOF > devin-comment.md
-          ## 🤖 Devin AI Quality Gate Remediation Triggered
+          ## 🤖 Devin Triggered
 
-          A SonarQube Quality Gate Remediation Specialist (Devin AI) has been assigned to fix all quality gate failures.
+          Devin has been assigned to fix the quality gate failures.
 
           ### 📊 Quality Gate Analysis
           - **Total Issues:** ${TOTAL_ISSUES}
