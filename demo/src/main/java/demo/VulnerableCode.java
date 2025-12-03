@@ -4,33 +4,41 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.util.logging.Logger;
+import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
- * Secure Code Demo - demonstrates secure coding practices
+ * DEMO FILE: This file demonstrates secure coding practices
+ * that pass SonarQube quality gates.
  */
 public class VulnerableCode {
 
-    private static final Logger LOGGER = Logger.getLogger(VulnerableCode.class.getName());
-
-    // Database credentials from environment variables
+    // Use environment variables for credentials
     private static final String DB_PASSWORD = System.getenv("DB_PASSWORD") != null 
-        ? System.getenv("DB_PASSWORD") : "";
+        ? System.getenv("DB_PASSWORD") 
+        : "";
     private static final String DB_USER = System.getenv("DB_USER") != null 
-        ? System.getenv("DB_USER") : "root";
+        ? System.getenv("DB_USER") 
+        : "root";
     private static final String DB_URL = System.getenv("DB_URL") != null 
-        ? System.getenv("DB_URL") : "jdbc:mysql://localhost:3306/banking";
+        ? System.getenv("DB_URL") 
+        : "jdbc:mysql://localhost:3306/banking";
 
-    // Reusable SecureRandom instance
+    // Reuse SecureRandom instance
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     /**
-     * Get user by username using parameterized query to prevent SQL injection
+     * FIXED: Uses parameterized queries to prevent SQL injection
+     * @param username the username to search for
+     * @return ResultSet containing user data
+     * @throws SQLException if database error occurs
      */
-    public ResultSet getUserByUsername(String username) throws java.sql.SQLException {
+    public ResultSet getUserByUsername(String username) throws SQLException {
         Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
         String query = "SELECT * FROM users WHERE username = ?";
         PreparedStatement stmt = conn.prepareStatement(query);
@@ -39,13 +47,16 @@ public class VulnerableCode {
     }
 
     /**
-     * Read file with proper resource management using try-with-resources
+     * FIXED: Uses try-with-resources to properly close FileInputStream
+     * @param path the file path to read
+     * @return byte array containing file data
+     * @throws IOException if file read error occurs
      */
     public byte[] readFile(String path) throws IOException {
         try (FileInputStream fis = new FileInputStream(path)) {
             byte[] data = new byte[1024];
             int bytesRead = fis.read(data);
-            if (bytesRead < 0) {
+            if (bytesRead == -1) {
                 return new byte[0];
             }
             byte[] result = new byte[bytesRead];
@@ -55,7 +66,9 @@ public class VulnerableCode {
     }
 
     /**
-     * Process user with null safety
+     * FIXED: Adds null check to prevent null pointer dereference
+     * @param user the user to process
+     * @return uppercase name or empty string if user/name is null
      */
     public String processUser(User user) {
         if (user == null || user.getName() == null) {
@@ -65,17 +78,36 @@ public class VulnerableCode {
     }
 
     /**
-     * Encrypt data using strong AES encryption
+     * FIXED: Uses strong AES-GCM encryption instead of weak DES
+     * @param data the data to encrypt
+     * @return encrypted data as hex string
+     * @throws java.security.GeneralSecurityException if encryption error occurs
      */
-    public String encryptData(String data) throws java.security.NoSuchAlgorithmException, 
-            javax.crypto.NoSuchPaddingException {
-        javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding");
-        LOGGER.info(() -> "Cipher initialized for encryption");
-        return cipher.getAlgorithm();
+    public String encryptData(String data) throws java.security.GeneralSecurityException {
+        // Use AES-GCM which is a secure authenticated encryption mode
+        byte[] key = new byte[16];
+        SECURE_RANDOM.nextBytes(key);
+        SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
+        
+        byte[] iv = new byte[12];
+        SECURE_RANDOM.nextBytes(iv);
+        GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);
+        
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, gcmSpec);
+        byte[] encrypted = cipher.doFinal(data.getBytes());
+        
+        // Convert to hex string
+        StringBuilder sb = new StringBuilder();
+        for (byte b : encrypted) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 
     /**
-     * Generate secure token using SecureRandom
+     * FIXED: Uses SecureRandom instead of java.util.Random for security
+     * @return a secure random token
      */
     public int generateToken() {
         return SECURE_RANDOM.nextInt(1000000);
@@ -85,10 +117,18 @@ public class VulnerableCode {
     static class User {
         private String name;
 
+        public User() {
+            // Default constructor
+        }
+
+        public User(String name) {
+            this.name = name;
+        }
+
         public String getName() {
             return name;
         }
-        
+
         public void setName(String name) {
             this.name = name;
         }
