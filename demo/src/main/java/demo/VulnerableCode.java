@@ -34,16 +34,20 @@ public class VulnerableCode {
 
     /**
      * FIXED: Uses parameterized queries to prevent SQL injection
+     * and properly closes resources with try-with-resources
      * @param username the username to search for
-     * @return ResultSet containing user data
+     * @return true if user exists, false otherwise
      * @throws SQLException if database error occurs
      */
-    public ResultSet getUserByUsername(String username) throws SQLException {
-        Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+    public boolean getUserByUsername(String username) throws SQLException {
         String query = "SELECT * FROM users WHERE username = ?";
-        PreparedStatement stmt = conn.prepareStatement(query);
-        stmt.setString(1, username);
-        return stmt.executeQuery();
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, username);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        }
     }
 
     /**

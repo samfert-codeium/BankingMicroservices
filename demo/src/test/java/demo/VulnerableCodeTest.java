@@ -29,15 +29,15 @@ class VulnerableCodeTest {
     // Tests for getUserByUsername method
 
     @Test
-    @DisplayName("getUserByUsername should throw exception when database is unavailable")
+    @DisplayName("getUserByUsername should throw SQLException when database is unavailable")
     void getUserByUsername_withoutDatabase_throwsException() {
-        assertThrows(Exception.class, () -> vulnerableCode.getUserByUsername("testuser"));
+        assertThrows(java.sql.SQLException.class, () -> vulnerableCode.getUserByUsername("testuser"));
     }
 
     @Test
-    @DisplayName("getUserByUsername should throw exception with null username")
+    @DisplayName("getUserByUsername should throw SQLException with null username")
     void getUserByUsername_withNullUsername_throwsException() {
-        assertThrows(Exception.class, () -> vulnerableCode.getUserByUsername(null));
+        assertThrows(java.sql.SQLException.class, () -> vulnerableCode.getUserByUsername(null));
     }
 
     // Tests for readFile method
