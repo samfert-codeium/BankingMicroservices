@@ -177,11 +177,12 @@ jobs:
           SECURITY_HOTSPOTS="${{ steps.extract-issues.outputs.security_hotspots }}"
           FORMATTED_ISSUES='${{ steps.extract-issues.outputs.formatted_issues }}'
 
-          # User prompt - simple and direct
+          # User prompt - simple and direct with link to SonarCloud
+          SONAR_URL="https://sonarcloud.io/project/issues?id=${{ env.SONAR_PROJECT_KEY }}&pullRequest=${{ github.event.pull_request.number }}"
+
           USER_PROMPT="Fix the SonarQube issues on branch ${{ github.head_ref }} and push your fix.
 
-          Issues to fix:
-          ${FORMATTED_ISSUES}"
+          SonarCloud Report: ${SONAR_URL}"
 
           # Create Devin session via API
           DEVIN_SESSION=$(curl -s -X POST "https://api.devin.ai/v1/sessions" \
