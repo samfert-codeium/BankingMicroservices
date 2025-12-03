@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.security.MessageDigest;
-import java.util.Random;
+import java.security.SecureRandom;
 import java.util.logging.Logger;
 
 /**
@@ -25,8 +25,8 @@ public class PaymentProcessor {
         ? System.getenv("DB_PASSWORD") 
         : "";
 
-    // Reusable Random instance
-    private static final Random RANDOM = new Random();
+    // Reusable SecureRandom instance for cryptographically secure random numbers
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     /**
      * Process a payment using parameterized queries
@@ -68,10 +68,10 @@ public class PaymentProcessor {
     }
 
     /**
-     * Generate transaction ID using reusable Random instance
+     * Generate transaction ID using reusable SecureRandom instance
      */
     public String generateTransactionId() {
-        return "TXN-" + RANDOM.nextInt(999999999);
+        return "TXN-" + SECURE_RANDOM.nextInt(999999999);
     }
 
     /**
@@ -91,7 +91,7 @@ public class PaymentProcessor {
         String maskedCard = cardNumber != null && cardNumber.length() > 4 
             ? "****" + cardNumber.substring(cardNumber.length() - 4) 
             : "****";
-        LOGGER.info("Processing payment: Card=" + maskedCard + ", Amount=" + amount);
+        LOGGER.info(() -> "Processing payment: Card=" + maskedCard + ", Amount=" + amount);
     }
 
     // Helper class
