@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Logger;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -34,16 +35,25 @@ public class VulnerableCode {
 
     /**
      * FIXED: Uses parameterized queries to prevent SQL injection
+     * Note: Caller is responsible for closing the returned ResultSet
      * @param username the username to search for
-     * @return ResultSet containing user data
+     * @return User object containing user data, or null if not found
      * @throws SQLException if database error occurs
      */
-    public ResultSet getUserByUsername(String username) throws SQLException {
-        Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-        String query = "SELECT * FROM users WHERE username = ?";
-        PreparedStatement stmt = conn.prepareStatement(query);
-        stmt.setString(1, username);
-        return stmt.executeQuery();
+    public User getUserByUsername(String username) throws SQLException {
+        String query = "SELECT id, username, email FROM users WHERE username = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, username);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    User user = new User();
+                    user.setName(rs.getString("username"));
+                    return user;
+                }
+                return null;
+            }
+        }
     }
 
     /**
