@@ -287,4 +287,143 @@ class VulnerableCodeTest {
         assertNotNull(result);
         assertEquals(content, new String(result));
     }
+
+    // Additional tests for encryptData to improve coverage
+
+    @Test
+    @DisplayName("encryptData should produce non-empty output for single character")
+    void encryptData_withSingleChar_returnsNonEmpty() throws GeneralSecurityException {
+        String result = vulnerableCode.encryptData("a");
+        assertNotNull(result);
+        assertTrue(result.length() > 0);
+    }
+
+    @Test
+    @DisplayName("encryptData should produce valid hex for unicode input")
+    void encryptData_withUnicode_returnsValidHex() throws GeneralSecurityException {
+        String result = vulnerableCode.encryptData("\u00e9\u00e8\u00ea");
+        assertNotNull(result);
+        assertTrue(result.matches("[0-9a-f]+"));
+    }
+
+    @Test
+    @DisplayName("encryptData should handle numeric string")
+    void encryptData_withNumericString_returnsNonNull() throws GeneralSecurityException {
+        String result = vulnerableCode.encryptData("1234567890");
+        assertNotNull(result);
+        assertTrue(result.length() > 0);
+    }
+
+    // Additional tests for User class to improve coverage
+
+    @Test
+    @DisplayName("User getName after setName should return updated value")
+    void user_getNameAfterSetName_returnsUpdatedValue() {
+        VulnerableCode.User user = new VulnerableCode.User("initial");
+        assertEquals("initial", user.getName());
+        user.setName("updated");
+        assertEquals("updated", user.getName());
+    }
+
+    @Test
+    @DisplayName("User setName with null should set null")
+    void user_setNameWithNull_setsNull() {
+        VulnerableCode.User user = new VulnerableCode.User("initial");
+        user.setName(null);
+        assertNull(user.getName());
+    }
+
+    @Test
+    @DisplayName("User constructor with empty string should set empty name")
+    void user_constructorWithEmptyString_setsEmptyName() {
+        VulnerableCode.User user = new VulnerableCode.User("");
+        assertEquals("", user.getName());
+    }
+
+    // Additional tests for processUser to improve coverage
+
+    @Test
+    @DisplayName("processUser should handle user with numbers in name")
+    void processUser_withNumbersInName_returnsUppercase() {
+        VulnerableCode.User user = new VulnerableCode.User("user123");
+        String result = vulnerableCode.processUser(user);
+        assertEquals("USER123", result);
+    }
+
+    @Test
+    @DisplayName("processUser should handle user with special characters in name")
+    void processUser_withSpecialCharsInName_returnsUppercase() {
+        VulnerableCode.User user = new VulnerableCode.User("user-name_test");
+        String result = vulnerableCode.processUser(user);
+        assertEquals("USER-NAME_TEST", result);
+    }
+
+    // Additional tests for generateToken to improve coverage
+
+    @Test
+    @DisplayName("generateToken should not return negative values")
+    void generateToken_shouldNotReturnNegative() {
+        for (int i = 0; i < 50; i++) {
+            int token = vulnerableCode.generateToken();
+            assertTrue(token >= 0, "Token should not be negative");
+        }
+    }
+
+    @Test
+    @DisplayName("generateToken should return values less than 1000000")
+    void generateToken_shouldReturnLessThanMillion() {
+        for (int i = 0; i < 50; i++) {
+            int token = vulnerableCode.generateToken();
+            assertTrue(token < 1000000, "Token should be less than 1000000");
+        }
+    }
+
+    // Additional tests for readFile to improve coverage
+
+    @Test
+    @DisplayName("readFile should handle file with exactly 1024 bytes")
+    void readFile_withExactBufferSize_returnsContent(@TempDir Path tempDir) throws IOException {
+        File tempFile = tempDir.resolve("exact.txt").toFile();
+        StringBuilder content = new StringBuilder();
+        for (int i = 0; i < 1024; i++) {
+            content.append("x");
+        }
+        try (FileWriter writer = new FileWriter(tempFile)) {
+            writer.write(content.toString());
+        }
+        byte[] result = vulnerableCode.readFile(tempFile.getAbsolutePath());
+        assertNotNull(result);
+        assertEquals(1024, result.length);
+    }
+
+    @Test
+    @DisplayName("readFile should handle file with single byte")
+    void readFile_withSingleByte_returnsContent(@TempDir Path tempDir) throws IOException {
+        File tempFile = tempDir.resolve("single.txt").toFile();
+        try (FileWriter writer = new FileWriter(tempFile)) {
+            writer.write("X");
+        }
+        byte[] result = vulnerableCode.readFile(tempFile.getAbsolutePath());
+        assertNotNull(result);
+        assertEquals(1, result.length);
+        assertEquals("X", new String(result));
+    }
+
+    // Additional getUserByUsername tests
+
+    @Test
+    @DisplayName("getUserByUsername should throw SQLException with whitespace username")
+    void getUserByUsername_withWhitespaceUsername_throwsException() {
+        assertThrows(java.sql.SQLException.class, () -> vulnerableCode.getUserByUsername("   "));
+    }
+
+    @Test
+    @DisplayName("getUserByUsername should throw SQLException with very long username")
+    void getUserByUsername_withVeryLongUsername_throwsException() {
+        StringBuilder longUsername = new StringBuilder();
+        for (int i = 0; i < 1000; i++) {
+            longUsername.append("a");
+        }
+        assertThrows(java.sql.SQLException.class, () -> vulnerableCode.getUserByUsername(longUsername.toString()));
+    }
 }
