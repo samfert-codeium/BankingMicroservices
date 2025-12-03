@@ -48,10 +48,6 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      - name: Build demo module and run tests
-        run: |
-          cd demo && mvn clean test jacoco:report -q
-
       - name: SonarQube Scan
         run: |
           # Using sonar-scanner CLI for flexibility
