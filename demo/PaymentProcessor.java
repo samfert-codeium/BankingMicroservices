@@ -1,88 +1,97 @@
-package com.banking.demo;
+package demo;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.security.MessageDigest;
 import java.util.Random;
+import java.util.logging.Logger;
 
 /**
  * Payment Processor - handles payment transactions
- *
- * WARNING: This code contains security vulnerabilities for demo purposes
  */
 public class PaymentProcessor {
 
-    // VULNERABILITY: Hardcoded database credentials
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/payments";
-    private static final String DB_USER = "payment_admin";
-    private static final String DB_PASSWORD = "Payment123!";
+    private static final Logger LOGGER = Logger.getLogger(PaymentProcessor.class.getName());
 
-    // VULNERABILITY: Hardcoded API key
-    private static final String API_KEY = "sk_live_abc123xyz789secret";
+    // Database credentials from environment variables
+    private static final String DB_URL = System.getenv("DB_URL") != null 
+        ? System.getenv("DB_URL") 
+        : "jdbc:mysql://localhost:3306/payments";
+    private static final String DB_USER = System.getenv("DB_USER") != null 
+        ? System.getenv("DB_USER") 
+        : "payment_admin";
+    private static final String DB_PASSWORD = System.getenv("DB_PASSWORD") != null 
+        ? System.getenv("DB_PASSWORD") 
+        : "";
+
+    // Reusable Random instance
+    private static final Random RANDOM = new Random();
 
     /**
-     * Process a payment - VULNERABLE TO SQL INJECTION
+     * Process a payment using parameterized queries
      */
     public boolean processPayment(String accountId, String amount, String description) {
-        try {
-            Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-            Statement stmt = conn.createStatement();
-
-            // VULNERABILITY: SQL Injection - user input directly concatenated
-            String sql = "INSERT INTO payments (account_id, amount, description) VALUES ('"
-                + accountId + "', '" + amount + "', '" + description + "')";
-            stmt.executeUpdate(sql);
-
-            // VULNERABILITY: Resource leak - connection never closed
+        String sql = "INSERT INTO payments (account_id, amount, description) VALUES (?, ?, ?)";
+        
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, accountId);
+            stmt.setString(2, amount);
+            stmt.setString(3, description);
+            stmt.executeUpdate();
+            
             return true;
-        } catch (Exception e) {
-            // VULNERABILITY: Generic exception catch, swallowing details
+        } catch (java.sql.SQLException e) {
+            LOGGER.warning("SQL error processing payment: " + e.getMessage());
             return false;
         }
     }
 
     /**
-     * Verify payment signature - USES WEAK HASHING
+     * Verify payment signature using SHA-256
      */
     public String hashPaymentData(String data) {
         try {
-            // VULNERABILITY: MD5 is cryptographically weak
-            MessageDigest md = MessageDigest.getInstance("MD5");
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] hash = md.digest(data.getBytes());
             StringBuilder hexString = new StringBuilder();
             for (byte b : hash) {
                 hexString.append(String.format("%02x", b));
             }
             return hexString.toString();
-        } catch (Exception e) {
+        } catch (java.security.NoSuchAlgorithmException e) {
+            LOGGER.warning("Hashing algorithm not found: " + e.getMessage());
             return null;
         }
     }
 
     /**
-     * Generate transaction ID - INSECURE RANDOM
+     * Generate transaction ID using reusable Random instance
      */
     public String generateTransactionId() {
-        // VULNERABILITY: Using insecure Random for security-sensitive operation
-        Random random = new Random();
-        return "TXN-" + random.nextInt(999999999);
+        return "TXN-" + RANDOM.nextInt(999999999);
     }
 
     /**
-     * Validate account - NULL POINTER RISK
+     * Validate account with null safety
      */
     public boolean validateAccount(Account account) {
-        // VULNERABILITY: No null check before dereferencing
+        if (account == null || account.getStatus() == null) {
+            return false;
+        }
         return account.getStatus().equals("ACTIVE") && account.getBalance() > 0;
     }
 
     /**
-     * Log payment - POTENTIAL INFO DISCLOSURE
+     * Log payment without sensitive data
      */
     public void logPayment(String cardNumber, String amount) {
-        // VULNERABILITY: Logging sensitive data (card number)
-        System.out.println("Processing payment: Card=" + cardNumber + ", Amount=" + amount);
+        String maskedCard = cardNumber != null && cardNumber.length() > 4 
+            ? "****" + cardNumber.substring(cardNumber.length() - 4) 
+            : "****";
+        LOGGER.info("Processing payment: Card=" + maskedCard + ", Amount=" + amount);
     }
 
     // Helper class
@@ -94,5 +103,3 @@ public class PaymentProcessor {
         public double getBalance() { return balance; }
     }
 }
-// Trigger workflow
-// Tue Dec  2 23:56:45 PST 2025
