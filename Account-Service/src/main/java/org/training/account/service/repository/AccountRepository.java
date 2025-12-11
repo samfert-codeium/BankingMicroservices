@@ -1,5 +1,6 @@
 package org.training.account.service.repository;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.training.account.service.model.AccountType;
 import org.training.account.service.model.entity.Account;
@@ -23,6 +24,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
      * @param accountNumber The account number to search for.
      * @return An optional containing the found account, or an empty optional if no account was found.
      */
+    @Cacheable(value = "accounts", key = "#accountNumber")
     Optional<Account> findAccountByAccountNumber(String accountNumber);
 
     /**
@@ -31,5 +33,6 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
      * @param userId the ID of the user
      * @return an optional account object
      */
+    @Cacheable(value = "accounts", key = "'user:' + #userId")
     Optional<Account> findAccountByUserId(Long userId);
 }

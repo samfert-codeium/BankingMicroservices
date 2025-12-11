@@ -1,5 +1,6 @@
 package org.training.user.service.repository;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.training.user.service.model.entity.User;
 
@@ -13,5 +14,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @param  authId  the authentication ID of the user
      * @return         an optional containing the user if found, otherwise empty
      */
+    @Cacheable(value = "users", key = "#authId")
     Optional<User> findUserByAuthId(String authId);
 }

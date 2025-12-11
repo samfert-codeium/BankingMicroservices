@@ -1,5 +1,6 @@
 package org.training.fundtransfer.repository;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.training.fundtransfer.model.entity.FundTransfer;
 
@@ -14,6 +15,7 @@ public interface FundTransferRepository extends JpaRepository<FundTransfer, Long
      * @param referenceId the transaction reference ID
      * @return an optional fund transfer object
      */
+    @Cacheable(value = "fundTransfers", key = "'ref:' + #referenceId")
     Optional<FundTransfer> findFundTransferByTransactionReference(String referenceId);
 
     /**
@@ -22,5 +24,6 @@ public interface FundTransferRepository extends JpaRepository<FundTransfer, Long
      * @param accountId The ID of the from account.
      * @return A list of FundTransfer objects.
      */
+    @Cacheable(value = "fundTransfers", key = "'account:' + #accountId")
     List<FundTransfer> findFundTransferByFromAccount(String accountId);
 }
