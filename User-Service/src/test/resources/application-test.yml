@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: user-service
+    success: 200
+    not_found: 404
+  datasource:
+    url: jdbc:h2:mem:testdb;NON_KEYWORDS=USER
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+        globally_quoted_identifiers: true
