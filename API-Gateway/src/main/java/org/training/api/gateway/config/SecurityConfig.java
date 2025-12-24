@@ -19,7 +19,6 @@ public class SecurityConfig {
                 //ALL OTHER APIS ARE AUTHENTICATED
                 .anyExchange().authenticated()
                 .and()
-                .csrf().disable()
                 .oauth2Login()
                 .and()
                 .oauth2ResourceServer()

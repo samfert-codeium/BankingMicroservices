@@ -46,6 +46,23 @@ To get started, follow these steps to run the application on your local applicat
 - Set up Keycloak for authentication and authorization. Refer to the detailed configuration guide provided [here](https://devscribbles.hashnode.dev/mastering-microservices-authentication-and-authorization-with-keycloak) for step-by-step instructions on configuring Keycloak for your microservices.
 - Some microservices and APIs may depend on others being up and running. Ensure that all necessary microservices and APIs are up and functioning correctly to avoid any issues in the application workflow.
 
+<h2>⚙️ Environment Variables</h2>
+
+The application requires the following environment variables to be configured:
+
+### Database Configuration
+All microservices require MySQL database credentials:
+- `MYSQL_HOST` - MySQL server host (default: localhost)
+- `MYSQL_PORT` - MySQL server port (default: 3306)
+- `MYSQL_DB_NAME` - Database name (varies per service: user_service, account_service, sequence_generator, fund_transfer_service, transaction_service)
+- `MYSQL_USER` - Database username (default: root)
+- `MYSQL_PASSWORD` - Database password (default: root)
+
+### OAuth2/Keycloak Configuration
+- `KEYCLOAK_CLIENT_SECRET` - OAuth2 client secret for Keycloak authentication (required for API-Gateway and User-Service)
+
+**Note:** Default values are provided for development purposes only. In production, always set these environment variables explicitly and never use default credentials.
+
 <h2>📖 Documentation</h2>
 <h3>📂 Microservices Documentation</h3>
 
