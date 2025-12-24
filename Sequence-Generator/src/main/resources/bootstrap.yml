@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: sequence-generator
+  cloud:
+    config:
+      uri: http://localhost:8888
