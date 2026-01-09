@@ -6,6 +6,17 @@ import org.training.fundtransfer.model.entity.FundTransfer;
 
 import java.util.Objects;
 
+/**
+ * Mapper class for converting between {@link FundTransfer} entities and {@link FundTransferDto} objects.
+ * 
+ * <p>This mapper extends {@link BaseMapper} and provides specific implementation
+ * for converting fund transfer data between the persistence layer (entities) and
+ * the API layer (DTOs).</p>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.fundtransfer.model.mapper.BaseMapper
+ */
 public class FundTransferMapper extends BaseMapper<FundTransfer, FundTransferDto> {
 
     /**

@@ -11,6 +11,16 @@ import org.training.fundtransfer.model.dto.response.Response;
 
 import java.util.List;
 
+/**
+ * Feign client interface for communicating with the Transaction Service.
+ * 
+ * <p>This client provides methods to create transaction records as part of
+ * fund transfer operations. It uses Eureka service discovery to locate
+ * the Transaction Service.</p>
+ * 
+ * @author Training Team
+ * @version 1.0
+ */
 @FeignClient(name = "transaction-service", configuration = FeignClientConfiguration.class)
 public interface TransactionService {
 

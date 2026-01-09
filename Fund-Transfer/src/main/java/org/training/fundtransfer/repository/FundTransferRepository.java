@@ -6,6 +6,17 @@ import org.training.fundtransfer.model.entity.FundTransfer;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Repository interface for {@link FundTransfer} entity persistence operations.
+ * 
+ * <p>This repository extends JpaRepository to provide standard CRUD operations
+ * and adds custom query methods for finding fund transfers by transaction
+ * reference and account.</p>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.fundtransfer.model.entity.FundTransfer
+ */
 public interface FundTransferRepository extends JpaRepository<FundTransfer, Long> {
 
     /**
