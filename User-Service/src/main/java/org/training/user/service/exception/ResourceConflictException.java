@@ -1,23 +1,29 @@
 package org.training.user.service.exception;
 
+/**
+ * Exception thrown when a resource conflict occurs.
+ * 
+ * <p>This exception is thrown when an operation would create a duplicate resource
+ * or violate a uniqueness constraint. For example, attempting to register a user
+ * with an email that is already registered. It results in an HTTP 409 Conflict response.</p>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.user.service.exception.GlobalException
+ */
 public class ResourceConflictException extends GlobalException{
 
     /**
-     * Constructs a new runtime exception with {@code null} as its
-     * detail message.  The cause is not initialized, and may subsequently be
-     * initialized by a call to {@link #initCause}.
+     * Constructs a ResourceConflictException with a default message.
      */
     public ResourceConflictException() {
         super("Resource already present on the server!!!");
     }
 
     /**
-     * Constructs a new runtime exception with the specified detail message.
-     * The cause is not initialized, and may subsequently be initialized by a
-     * call to {@link #initCause}.
+     * Constructs a ResourceConflictException with a custom message.
      *
-     * @param message the detail message. The detail message is saved for
-     *                later retrieval by the {@link #getMessage()} method.
+     * @param message the detailed error message
      */
     public ResourceConflictException(String message) {
         super(message);
