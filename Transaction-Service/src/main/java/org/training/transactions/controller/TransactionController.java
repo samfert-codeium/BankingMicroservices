@@ -12,12 +12,32 @@ import org.training.transactions.service.TransactionService;
 
 import java.util.List;
 
+/**
+ * REST controller for transaction operations.
+ * 
+ * <p>This controller exposes endpoints for creating transactions and retrieving
+ * transaction history. It handles HTTP requests and delegates business logic
+ * to the {@link TransactionService}.</p>
+ * 
+ * <p>Available endpoints:</p>
+ * <ul>
+ *   <li>POST /transactions - Create a new transaction (deposit/withdrawal)</li>
+ *   <li>POST /transactions/internal - Process internal transfer transactions</li>
+ *   <li>GET /transactions?accountId={id} - Get transaction history for an account</li>
+ *   <li>GET /transactions/{referenceId} - Get transactions by reference ID</li>
+ * </ul>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.transactions.service.TransactionService
+ */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/transactions")
 public class TransactionController {
 
+    /** Service for handling transaction business logic. */
     private final TransactionService transactionService;
 
     /**

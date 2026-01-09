@@ -6,6 +6,16 @@ import org.training.transactions.model.response.TransactionRequest;
 
 import java.util.List;
 
+/**
+ * Service interface defining transaction operations.
+ * 
+ * <p>This interface defines the contract for transaction business operations
+ * including creating transactions and retrieving transaction history.</p>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.transactions.service.implementation.TransactionServiceImpl
+ */
 public interface TransactionService {
 
     /**

@@ -7,6 +7,16 @@ import org.training.transactions.configuration.FeignClientConfiguration;
 import org.training.transactions.model.external.Account;
 import org.training.transactions.model.response.Response;
 
+/**
+ * Feign client interface for communicating with the Account Service.
+ * 
+ * <p>This client provides methods to retrieve and update account information
+ * as part of transaction operations. It uses Eureka service discovery
+ * to locate the Account Service.</p>
+ * 
+ * @author Training Team
+ * @version 1.0
+ */
 @FeignClient(name = "account-service", configuration = FeignClientConfiguration.class)
 public interface AccountService {
 
