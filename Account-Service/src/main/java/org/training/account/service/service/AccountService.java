@@ -7,6 +7,18 @@ import org.training.account.service.model.dto.external.TransactionResponse;
 
 import java.util.List;
 
+/**
+ * Service interface for bank account operations.
+ * 
+ * <p>This interface defines the contract for all account-related business operations
+ * including account creation, status management, balance inquiries, and account closure.
+ * Implementations handle the business logic and coordinate with repositories and
+ * external services.</p>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.account.service.service.implementation.AccountServiceImpl
+ */
 public interface AccountService {
 
     /**

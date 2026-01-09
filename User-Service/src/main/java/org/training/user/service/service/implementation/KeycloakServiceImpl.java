@@ -11,10 +11,31 @@ import org.training.user.service.service.KeycloakService;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Implementation of the {@link KeycloakService} interface.
+ * 
+ * <p>This service provides the actual implementation for Keycloak operations
+ * using the Keycloak Admin Client. It manages user lifecycle operations in
+ * the Keycloak identity provider.</p>
+ * 
+ * <p>Operations include:</p>
+ * <ul>
+ *   <li>Creating new users in Keycloak</li>
+ *   <li>Searching users by email</li>
+ *   <li>Retrieving user details by auth ID</li>
+ *   <li>Updating user properties (enabled, emailVerified)</li>
+ * </ul>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.user.service.service.KeycloakService
+ * @see org.training.user.service.config.KeyCloakManager
+ */
 @Service
 @RequiredArgsConstructor
 public class KeycloakServiceImpl implements KeycloakService {
 
+    /** Manager for obtaining Keycloak client instances. */
     private final KeyCloakManager keyCloakManager;
 
     /**

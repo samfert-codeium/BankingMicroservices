@@ -32,16 +32,42 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Implementation of the {@link UserService} interface.
+ * 
+ * <p>This service handles all user-related business logic including registration,
+ * profile management, and status updates. It coordinates between Keycloak for
+ * authentication and the local database for application-specific user data.</p>
+ * 
+ * <p>Key features:</p>
+ * <ul>
+ *   <li>User registration with Keycloak integration (dual storage)</li>
+ *   <li>Admin approval workflow for new registrations</li>
+ *   <li>User profile updates and status management</li>
+ *   <li>Integration with Account Service for user-account lookups</li>
+ * </ul>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.user.service.service.UserService
+ * @see org.training.user.service.service.KeycloakService
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class UserServiceImpl implements UserService {
 
+    /** Repository for user data persistence. */
     private final UserRepository userRepository;
+    
+    /** Service for Keycloak authentication operations. */
     private final KeycloakService keycloakService;
+    
+    /** Feign client for Account Service communication. */
     private final AccountService accountService;
 
+    /** Mapper for converting between User entities and DTOs. */
     private UserMapper userMapper = new UserMapper();
 
     @Value("${spring.application.success}")

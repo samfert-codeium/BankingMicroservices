@@ -13,12 +13,40 @@ import org.training.account.service.service.AccountService;
 
 import java.util.List;
 
+/**
+ * REST controller for managing bank account operations.
+ * 
+ * <p>This controller exposes endpoints for creating, reading, updating, and closing
+ * bank accounts. It handles all account-related HTTP requests and delegates business
+ * logic to the {@link AccountService}.</p>
+ * 
+ * <p>Base URL: /accounts</p>
+ * 
+ * <p>Available endpoints:</p>
+ * <ul>
+ *   <li>POST /accounts - Create a new account</li>
+ *   <li>GET /accounts - Get account by account number</li>
+ *   <li>PUT /accounts - Update account details</li>
+ *   <li>PATCH /accounts - Update account status</li>
+ *   <li>GET /accounts/balance - Get account balance</li>
+ *   <li>GET /accounts/{accountId}/transactions - Get account transactions</li>
+ *   <li>PUT /accounts/closure - Close an account</li>
+ *   <li>GET /accounts/{userId} - Get account by user ID</li>
+ * </ul>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.account.service.service.AccountService
+ */
 @Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/accounts")
 public class AccountController {
 
+    /**
+     * Service for handling account business logic.
+     */
     private final AccountService accountService;
 
     /**

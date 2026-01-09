@@ -8,6 +8,19 @@ import org.training.account.service.model.dto.external.TransactionResponse;
 
 import java.util.List;
 
+/**
+ * Feign client interface for communicating with the Transaction Service.
+ * 
+ * <p>This interface defines the contract for making HTTP requests to the Transaction Service
+ * microservice. It enables the Account Service to retrieve transaction history for accounts.</p>
+ * 
+ * <p>The client is configured to use the "transaction-service" name for service discovery
+ * and applies custom error handling via {@link FeignConfiguration}.</p>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.account.service.configuration.FeignConfiguration
+ */
 @FeignClient(name = "transaction-service", configuration = FeignConfiguration.class)
 public interface TransactionService {
 
