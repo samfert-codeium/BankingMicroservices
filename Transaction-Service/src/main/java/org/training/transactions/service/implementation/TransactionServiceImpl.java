@@ -27,16 +27,40 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Implementation of the {@link TransactionService} interface.
+ * 
+ * <p>This service handles all transaction business logic including creating
+ * transactions, processing internal transfers, and retrieving transaction history.
+ * It coordinates with the Account Service for balance updates.</p>
+ * 
+ * <p>Key features:</p>
+ * <ul>
+ *   <li>Deposit and withdrawal transactions</li>
+ *   <li>Internal transfer transaction recording</li>
+ *   <li>Account balance validation</li>
+ *   <li>Transaction history retrieval</li>
+ * </ul>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.transactions.service.TransactionService
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TransactionServiceImpl implements TransactionService {
 
+    /** Repository for transaction data persistence. */
     private final TransactionRepository transactionRepository;
+    
+    /** Feign client for Account Service communication. */
     private final AccountService accountService;
 
+    /** Mapper for converting between Transaction entities and DTOs. */
     private final TransactionMapper transactionMapper = new TransactionMapper();
 
+    /** Response code for successful operations. */
     @Value("${spring.application.ok}")
     private String ok;
 

@@ -4,6 +4,20 @@ import org.keycloak.representations.idm.UserRepresentation;
 
 import java.util.List;
 
+/**
+ * Service interface for Keycloak authentication operations.
+ * 
+ * <p>This interface defines the contract for interacting with Keycloak as the
+ * identity provider. It provides methods for user management operations in
+ * Keycloak including creation, retrieval, and updates.</p>
+ * 
+ * <p>The service uses the Keycloak Admin Client to perform administrative
+ * operations on the banking-service realm.</p>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.user.service.service.implementation.KeycloakServiceImpl
+ */
 public interface KeycloakService {
 
     /**

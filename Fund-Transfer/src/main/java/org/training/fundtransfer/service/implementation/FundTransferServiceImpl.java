@@ -28,18 +28,44 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * Implementation of the {@link FundTransferService} interface.
+ * 
+ * <p>This service handles all fund transfer business logic including validation,
+ * balance updates, and transaction recording. It coordinates with the Account Service
+ * and Transaction Service to complete transfers.</p>
+ * 
+ * <p>Key features:</p>
+ * <ul>
+ *   <li>Internal fund transfers between accounts</li>
+ *   <li>Account status and balance validation</li>
+ *   <li>Transaction reference generation</li>
+ *   <li>Transfer history tracking</li>
+ * </ul>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.fundtransfer.service.FundTransferService
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FundTransferServiceImpl implements FundTransferService {
 
+    /** Feign client for Account Service communication. */
     private final AccountService accountService;
+    
+    /** Repository for fund transfer data persistence. */
     private final FundTransferRepository fundTransferRepository;
+    
+    /** Feign client for Transaction Service communication. */
     private final TransactionService transactionService;
 
+    /** Response code for successful operations. */
     @Value("${spring.application.ok}")
     private String ok;
 
+    /** Mapper for converting between FundTransfer entities and DTOs. */
     private final FundTransferMapper fundTransferMapper = new FundTransferMapper();
 
     /**

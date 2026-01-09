@@ -6,6 +6,16 @@ import org.training.fundtransfer.model.dto.response.FundTransferResponse;
 
 import java.util.List;
 
+/**
+ * Service interface defining fund transfer operations.
+ * 
+ * <p>This interface defines the contract for fund transfer business operations
+ * including initiating transfers and retrieving transfer history.</p>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.fundtransfer.service.implementation.FundTransferServiceImpl
+ */
 public interface FundTransferService {
 
     /**

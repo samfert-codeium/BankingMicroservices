@@ -8,6 +8,17 @@ import org.training.user.service.model.dto.response.Response;
 
 import java.util.List;
 
+/**
+ * Service interface defining user management operations.
+ * 
+ * <p>This interface defines the contract for user-related business operations
+ * including registration, retrieval, and status management. Implementations
+ * coordinate with Keycloak for authentication and the database for user data.</p>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.user.service.service.implementation.UserServiceImpl
+ */
 public interface UserService {
 
     /**

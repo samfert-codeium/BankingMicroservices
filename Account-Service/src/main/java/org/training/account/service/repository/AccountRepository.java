@@ -6,6 +6,18 @@ import org.training.account.service.model.entity.Account;
 
 import java.util.Optional;
 
+/**
+ * Repository interface for managing {@link Account} entities.
+ * 
+ * <p>This repository provides data access operations for bank accounts,
+ * extending JpaRepository for standard CRUD operations and adding custom
+ * query methods for account-specific lookups.</p>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.springframework.data.jpa.repository.JpaRepository
+ * @see org.training.account.service.model.entity.Account
+ */
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
     /**

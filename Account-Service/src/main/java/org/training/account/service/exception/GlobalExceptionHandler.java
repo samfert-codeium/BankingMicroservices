@@ -10,6 +10,23 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+/**
+ * Global exception handler for the Account Service.
+ * 
+ * <p>This class provides centralized exception handling across all controllers
+ * in the Account Service. It intercepts exceptions thrown during request processing
+ * and converts them into appropriate HTTP responses with error details.</p>
+ * 
+ * <p>Handled exceptions:</p>
+ * <ul>
+ *   <li>{@link MethodArgumentNotValidException} - Validation errors</li>
+ *   <li>{@link GlobalException} - Custom application exceptions</li>
+ * </ul>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 

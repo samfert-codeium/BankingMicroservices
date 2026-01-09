@@ -13,6 +13,24 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
+/**
+ * Custom error decoder for Feign client responses.
+ * 
+ * <p>This class implements the Feign {@link ErrorDecoder} interface to provide
+ * custom error handling for HTTP responses from external services. It extracts
+ * error information from the response body and converts it into appropriate
+ * exception types.</p>
+ * 
+ * <p>The decoder handles:</p>
+ * <ul>
+ *   <li>400 Bad Request errors - converted to {@link GlobalException}</li>
+ *   <li>Other errors - wrapped in a generic Exception</li>
+ * </ul>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see feign.codec.ErrorDecoder
+ */
 @Slf4j
 public class FeignClientErrorDecoder implements ErrorDecoder {
 

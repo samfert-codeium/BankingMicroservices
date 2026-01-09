@@ -14,6 +14,27 @@ import org.training.user.service.service.UserService;
 
 import java.util.List;
 
+/**
+ * REST controller for user management operations.
+ * 
+ * <p>This controller exposes endpoints for user registration, retrieval, and updates.
+ * It handles HTTP requests and delegates business logic to the {@link UserService}.</p>
+ * 
+ * <p>Available endpoints:</p>
+ * <ul>
+ *   <li>POST /api/users/register - Register a new user (public endpoint)</li>
+ *   <li>GET /api/users - Retrieve all users</li>
+ *   <li>GET /api/users/{userId} - Retrieve user by ID</li>
+ *   <li>GET /api/users/auth/{authId} - Retrieve user by Keycloak auth ID</li>
+ *   <li>GET /api/users/accounts/{accountId} - Retrieve user by account ID</li>
+ *   <li>PATCH /api/users/{id} - Update user status (admin approval)</li>
+ *   <li>PUT /api/users/{id} - Update user profile information</li>
+ * </ul>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.user.service.service.UserService
+ */
 @Slf4j
 @RestController
 @RequestMapping("/api/users")

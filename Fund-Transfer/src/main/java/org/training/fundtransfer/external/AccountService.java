@@ -10,6 +10,16 @@ import org.training.fundtransfer.configuration.FeignClientConfiguration;
 import org.training.fundtransfer.model.dto.Account;
 import org.training.fundtransfer.model.dto.response.Response;
 
+/**
+ * Feign client interface for communicating with the Account Service.
+ * 
+ * <p>This client provides methods to retrieve and update account information
+ * as part of fund transfer operations. It uses Eureka service discovery
+ * to locate the Account Service.</p>
+ * 
+ * @author Training Team
+ * @version 1.0
+ */
 @FeignClient(name = "account-service", configuration = FeignClientConfiguration.class)
 public interface AccountService {
 

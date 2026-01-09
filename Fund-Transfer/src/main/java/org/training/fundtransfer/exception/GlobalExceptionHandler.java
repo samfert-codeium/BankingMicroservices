@@ -10,9 +10,20 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+/**
+ * Global exception handler for the Fund Transfer Service.
+ * 
+ * <p>This class provides centralized exception handling across all controllers
+ * in the Fund Transfer Service. It intercepts exceptions thrown during request
+ * processing and converts them into appropriate HTTP responses with error details.</p>
+ * 
+ * @author Training Team
+ * @version 1.0
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    /** Error code for bad request responses (400). */
     @Value("${spring.application.bad_request}")
     private String badRequest;
 

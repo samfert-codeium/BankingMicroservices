@@ -7,6 +7,20 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.training.account.service.configuration.FeignConfiguration;
 import org.training.account.service.model.dto.external.UserDto;
 
+/**
+ * Feign client interface for communicating with the User Service.
+ * 
+ * <p>This interface defines the contract for making HTTP requests to the User Service
+ * microservice. It uses Spring Cloud OpenFeign for declarative REST client definition,
+ * enabling seamless inter-service communication.</p>
+ * 
+ * <p>The client is configured to use the "user-service" name for service discovery
+ * and applies custom error handling via {@link FeignConfiguration}.</p>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.account.service.configuration.FeignConfiguration
+ */
 @FeignClient(name = "user-service", configuration = FeignConfiguration.class)
 public interface UserService {
 

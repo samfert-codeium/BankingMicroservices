@@ -11,11 +11,30 @@ import org.training.fundtransfer.service.FundTransferService;
 
 import java.util.List;
 
+/**
+ * REST controller for fund transfer operations.
+ * 
+ * <p>This controller exposes endpoints for initiating fund transfers between accounts
+ * and retrieving transfer history. It handles HTTP requests and delegates business
+ * logic to the {@link FundTransferService}.</p>
+ * 
+ * <p>Available endpoints:</p>
+ * <ul>
+ *   <li>POST /fund-transfers - Initiate a new fund transfer</li>
+ *   <li>GET /fund-transfers/{referenceId} - Get transfer details by reference ID</li>
+ *   <li>GET /fund-transfers?accountId={id} - Get all transfers for an account</li>
+ * </ul>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.fundtransfer.service.FundTransferService
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/fund-transfers")
 public class FundTransferController {
 
+    /** Service for handling fund transfer business logic. */
     private final FundTransferService fundTransferService;
 
     /**

@@ -28,19 +28,59 @@ import java.util.Objects;
 
 import static org.training.account.service.model.Constants.ACC_PREFIX;
 
+/**
+ * Implementation of the {@link AccountService} interface.
+ * 
+ * <p>This service handles all account-related business operations including
+ * account creation, status updates, balance inquiries, and account closure.
+ * It coordinates with external services (User Service, Transaction Service,
+ * Sequence Generator) via Feign clients.</p>
+ * 
+ * <p>Key features:</p>
+ * <ul>
+ *   <li>Validates user existence before creating accounts</li>
+ *   <li>Generates unique account numbers using the Sequence Generator service</li>
+ *   <li>Enforces minimum balance requirements for account activation</li>
+ *   <li>Prevents duplicate accounts for the same user and account type</li>
+ * </ul>
+ * 
+ * @author Training Team
+ * @version 1.0
+ * @see org.training.account.service.service.AccountService
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
 
+    /**
+     * Feign client for communicating with the User Service.
+     */
     private final UserService userService;
+    
+    /**
+     * Repository for account data persistence operations.
+     */
     private final AccountRepository accountRepository;
+    
+    /**
+     * Feign client for generating unique account numbers.
+     */
     private final SequenceService sequenceService;
+    
+    /**
+     * Feign client for retrieving transaction data.
+     */
     private final TransactionService transactionService;
 
+    /**
+     * Mapper for converting between Account entities and DTOs.
+     */
     private final AccountMapper accountMapper = new AccountMapper();
 
-
+    /**
+     * Success response code loaded from application properties.
+     */
     @Value("${spring.application.ok}")
     private String success;
 

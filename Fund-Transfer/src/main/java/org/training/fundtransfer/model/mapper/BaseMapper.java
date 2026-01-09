@@ -5,6 +5,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Abstract base class for entity-DTO mapping operations.
+ * 
+ * <p>This class provides a generic framework for converting between entity objects
+ * and their corresponding Data Transfer Objects (DTOs). Concrete implementations
+ * must provide the specific conversion logic for their entity-DTO pairs.</p>
+ * 
+ * @param <E> the entity type
+ * @param <D> the DTO type
+ * @author Training Team
+ * @version 1.0
+ */
 public abstract class BaseMapper<E, D> {
 
     /**
